@@ -1,2 +1,5 @@
-# ionabio.github.io
-My personal page
+# nabi.be
+
+My personal page and works
+
+[Sudoku pad NYT link generator](nabi.be/sudokuPad)
