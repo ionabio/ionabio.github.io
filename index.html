@@ -38,7 +38,42 @@
         h1 {
             font-size: 3em;
             margin-bottom: 0.5em;
-            color: #333;
+            background: linear-gradient(45deg, #FFB3BA, #BAFFC9, #BAE1FF, #FFFFBA);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: textGradientAnimation 15s ease infinite;
+            position: relative;
+            display: inline-block;
+        }
+        h1::before {
+            content: attr(data-text);
+            position: absolute;
+            left: -2px;
+            top: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #FFB3BA, #BAFFC9, #BAE1FF, #FFFFBA);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: textGradientAnimation 15s ease infinite;
+            -webkit-text-stroke: 2px black;
+        }
+        @keyframes textGradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
         p {
             font-size: 1.2em;
@@ -58,7 +93,7 @@
 </head>
 <body>
     <div class="content-frame">
-        <h1>nabi.be</h1>
+        <h1 data-text="nabi.be">nabi.be</h1>
         <p>My personal page and works</p>
         <p><a href="http://nabi.be/sudokuPad">Sudoku pad NYT link generator</a></p>
     </div>
