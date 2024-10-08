@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nabi.be - Personal Page and Works</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle, #ffcccb, #b0e0e6, #e6e6fa);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        .content-frame {
+            background-color: white;
+            border: 2px solid black;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+            color: #333;
+        }
+        p {
+            font-size: 1.2em;
+            margin: 0.5em 0;
+            color: #666;
+        }
+        a {
+            color: #0066cc; /* Changed to a standard blue color */
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #004499; /* Darker blue on hover */
+            text-decoration: underline; /* Added underline on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="content-frame">
+        <h1>nabi.be</h1>
+        <p>My personal page and works</p>
+        <p><a href="http://nabi.be/sudokuPad">Sudoku pad NYT link generator</a></p>
+    </div>
+</body>
+</html>
