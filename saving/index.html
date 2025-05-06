@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Goal Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .progress-bar-bg {
+            background-color: #e9ecef;
+            /* Light grey for progress bar background */
+        }
+
+        /* Ensure canvas parent has relative positioning if canvas needs absolute positioning within it */
+        .chart-container {
+            position: relative;
+            /* Adjust height as needed for different screen sizes if desired */
+            /* Example: h-64 for small screens, h-96 for medium and up */
+            height: 24rem;
+            /* Equivalent to h-96 in Tailwind (1rem = 16px, 24rem = 384px) */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="container mx-auto max-w-5xl">
+        <header class="my-8">
+            <h1 class="text-4xl font-bold text-center text-gray-800">My Savings Goals Tracker</h1>
+            <p class="text-center text-gray-600 mt-2">Visualizing the path to your car payment and new home!</p>
+        </header>
+
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-blue-600 mb-1">Car Balloon Payment</h2>
+                <p class="text-sm text-gray-500 mb-4">Target: €<span id="carTargetAmount"></span></p>
+
+                <div class="mb-4">
+                    <label for="carSavedAmount" class="block text-sm font-medium text-gray-700 mb-1">Current Amount
+                        Saved (€):</label>
+                    <input type="number" id="carSavedAmount" min="0"
+                        class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="w-full progress-bar-bg rounded-full h-6 mb-1 overflow-hidden">
+                    <div id="carProgressBar"
+                        class="bg-blue-500 h-6 rounded-full text-xs font-medium text-white text-center p-1 leading-none"
+                        style="width: 0%;">
+                        <span id="carProgressText">0%</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mb-1 text-right">€<span id="carAmountRemaining"></span> remaining</p>
+                <p class="text-sm text-gray-700 mt-3">Forecast: <span id="carForecast" class="font-semibold"></span></p>
+            </div>
+
+            <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold text-green-600 mb-1">House Down Payment</h2>
+                <p class="text-sm text-gray-500 mb-4">Target: €<span id="houseTargetAmount"></span></p>
+
+                <div class="mb-4">
+                    <label for="houseSavedAmount" class="block text-sm font-medium text-gray-700 mb-1">Current Amount
+                        Saved (€):</label>
+                    <input type="number" id="houseSavedAmount" min="0"
+                        class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                </div>
+
+                <div class="w-full progress-bar-bg rounded-full h-6 mb-1 overflow-hidden">
+                    <div id="houseProgressBar"
+                        class="bg-green-500 h-6 rounded-full text-xs font-medium text-white text-center p-1 leading-none"
+                        style="width: 0%;">
+                        <span id="houseProgressText">0%</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mb-1 text-right">€<span id="houseAmountRemaining"></span> remaining</p>
+                <p class="text-sm text-gray-700 mt-3">Forecast: <span id="houseForecast" class="font-semibold"></span>
+                </p>
+            </div>
+
+            <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-lg flex flex-col justify-center items-center">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Tracker Controls</h2>
+                <button id="resetDataButton"
+                    class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                    Reset All Saved Data
+                </button>
+                <p class="text-xs text-gray-500 mt-2 text-center">This will reset your saved amounts to zero. Cannot be
+                    undone.</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Projected Savings Path</h3>
+            <div class="chart-container">
+                <canvas id="savingsChart"></canvas>
+            </div>
+        </div>
+
+        <footer class="text-center text-sm text-gray-500 mt-12 pb-8">
+            <p>Happy saving, Nabi! Remember, consistency is key.</p>
+            <p>This tracker uses your browser's local storage to save your progress. Data is not sent anywhere.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const GOALS = {
+            car: {
+                id: 'car',
+                name: 'Car Balloon Payment',
+                target: 23000,
+                plannedMonthly: 480,
+                color: 'rgba(59, 130, 246, 0.7)', // Tailwind blue-500
+                borderColor: 'rgba(59, 130, 246, 1)',
+                maxMonthsForGoal: 48, // Timeframe for this specific goal's planned saving
+            },
+            house: {
+                id: 'house',
+                name: 'House Down Payment',
+                target: 53350, // Estimated total upfront cash needed
+                plannedMonthlyPhase1: 700, // While car is being paid (first 48 months)
+                plannedMonthlyPhase2: 1500, // After car is paid (original 700 + 480 car balloon + 320 car monthly)
+                color: 'rgba(34, 197, 94, 0.7)', // Tailwind green-500
+                borderColor: 'rgba(34, 197, 94, 1)',
+            }
+        };
+        const TOTAL_MONTHS_TO_PLOT = 65; // Total months for chart X-axis (covers both goals)
+        const CAR_PAYOFF_MONTHS = GOALS.car.maxMonthsForGoal; // 48 months
+
+        // --- DOM ELEMENTS ---
+        const carTargetAmountEl = document.getElementById('carTargetAmount');
+        const carSavedAmountInput = document.getElementById('carSavedAmount');
+        const carProgressBar = document.getElementById('carProgressBar');
+        const carProgressText = document.getElementById('carProgressText');
+        const carAmountRemainingEl = document.getElementById('carAmountRemaining');
+        const carForecastEl = document.getElementById('carForecast');
+
+        const houseTargetAmountEl = document.getElementById('houseTargetAmount');
+        const houseSavedAmountInput = document.getElementById('houseSavedAmount');
+        const houseProgressBar = document.getElementById('houseProgressBar');
+        const houseProgressText = document.getElementById('houseProgressText');
+        const houseAmountRemainingEl = document.getElementById('houseAmountRemaining');
+        const houseForecastEl = document.getElementById('houseForecast');
+
+        const resetDataButton = document.getElementById('resetDataButton');
+        const chartCanvas = document.getElementById('savingsChart');
+        let savingsChart = null; // To hold the chart instance
+
+        // --- STATE ---
+        let currentSaved = {
+            car: 0,
+            house: 0
+        };
+
+        // --- FUNCTIONS ---
+
+        // Load data from localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('savingsTrackerNabi');
+            if (savedData) {
+                currentSaved = JSON.parse(savedData);
+            }
+            // Ensure targets are displayed
+            carTargetAmountEl.textContent = GOALS.car.target.toLocaleString();
+            houseTargetAmountEl.textContent = GOALS.house.target.toLocaleString();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('savingsTrackerNabi', JSON.stringify(currentSaved));
+        }
+
+        // Calculate forecast
+        function calculateForecasts() {
+            // Car Forecast
+            let carMonthsRemaining = 0;
+            if (currentSaved.car < GOALS.car.target) {
+                carMonthsRemaining = Math.ceil((GOALS.car.target - currentSaved.car) / GOALS.car.plannedMonthly);
+                carForecastEl.textContent = `${carMonthsRemaining} months remaining (at €${GOALS.car.plannedMonthly}/month)`;
+            } else {
+                carForecastEl.textContent = "Goal achieved! 🎉";
+            }
+
+            // House Forecast
+            let houseMonthsRemainingText = "";
+            if (currentSaved.house < GOALS.house.target) {
+                const carEffectivelyPaidOff = currentSaved.car >= GOALS.car.target;
+                let totalHouseMonthsRemaining = 0;
+
+                if (carEffectivelyPaidOff) {
+                    totalHouseMonthsRemaining = Math.ceil((GOALS.house.target - currentSaved.house) / GOALS.house.plannedMonthlyPhase2);
+                    houseMonthsRemainingText = `${totalHouseMonthsRemaining} months remaining (at €${GOALS.house.plannedMonthlyPhase2}/month)`;
+                } else {
+                    const monthsToPayCarFromCurrent = Math.max(0, Math.ceil((GOALS.car.target - currentSaved.car) / GOALS.car.plannedMonthly));
+                    const houseSavedWhilePayingCar = monthsToPayCarFromCurrent * GOALS.house.plannedMonthlyPhase1;
+                    const houseValueAfterCarPaid = currentSaved.house + houseSavedWhilePayingCar;
+
+                    if (houseValueAfterCarPaid >= GOALS.house.target) {
+                        let monthsInPhase1ForHouse = 0;
+                        if (GOALS.house.plannedMonthlyPhase1 > 0) {
+                            monthsInPhase1ForHouse = Math.ceil((GOALS.house.target - currentSaved.house) / GOALS.house.plannedMonthlyPhase1);
+                        }
+                        totalHouseMonthsRemaining = Math.min(monthsInPhase1ForHouse, monthsToPayCarFromCurrent);
+                        houseMonthsRemainingText = `${totalHouseMonthsRemaining} months remaining (at €${GOALS.house.plannedMonthlyPhase1}/month)`;
+                    } else {
+                        const remainingHouseTargetAfterCar = GOALS.house.target - houseValueAfterCarPaid;
+                        const monthsForHouseAfterCar = Math.ceil(remainingHouseTargetAfterCar / GOALS.house.plannedMonthlyPhase2);
+                        totalHouseMonthsRemaining = monthsToPayCarFromCurrent + monthsForHouseAfterCar;
+                        houseMonthsRemainingText = `${totalHouseMonthsRemaining} months total: ${monthsToPayCarFromCurrent} (phase 1) + ${monthsForHouseAfterCar} (phase 2)`;
+                    }
+                }
+                houseForecastEl.textContent = houseMonthsRemainingText;
+            } else {
+                houseForecastEl.textContent = "Goal achieved! 🎉";
+            }
+        }
+
+        // Update UI elements
+        function updateDisplay() {
+            // Update input fields
+            carSavedAmountInput.value = currentSaved.car;
+            houseSavedAmountInput.value = currentSaved.house;
+
+            // Car Progress
+            const carProgress = Math.min(100, (currentSaved.car / GOALS.car.target) * 100);
+            carProgressBar.style.width = `${carProgress}%`;
+            carProgressText.textContent = `${Math.round(carProgress)}%`;
+            carAmountRemainingEl.textContent = Math.max(0, GOALS.car.target - currentSaved.car).toLocaleString();
+
+            // House Progress
+            const houseProgress = Math.min(100, (currentSaved.house / GOALS.house.target) * 100);
+            houseProgressBar.style.width = `${houseProgress}%`;
+            houseProgressText.textContent = `${Math.round(houseProgress)}%`;
+            houseAmountRemainingEl.textContent = Math.max(0, GOALS.house.target - currentSaved.house).toLocaleString();
+
+            calculateForecasts();
+            renderChart();
+            saveData();
+        }
+
+        // Generate projected data for the chart
+        function getProjectedData() {
+            const carProjected = [];
+            const houseProjected = [];
+            let currentCarSavings = 0;
+            let currentHouseSavings = 0;
+
+            for (let month = 0; month <= TOTAL_MONTHS_TO_PLOT; month++) {
+                // Car savings projection
+                if (month > 0 && currentCarSavings < GOALS.car.target) {
+                    currentCarSavings += GOALS.car.plannedMonthly;
+                }
+                carProjected.push(Math.min(currentCarSavings, GOALS.car.target));
+
+                // House savings projection
+                if (month > 0 && currentHouseSavings < GOALS.house.target) {
+                    if (month <= CAR_PAYOFF_MONTHS) {
+                        currentHouseSavings += GOALS.house.plannedMonthlyPhase1;
+                    } else {
+                        currentHouseSavings += GOALS.house.plannedMonthlyPhase2;
+                    }
+                }
+                houseProjected.push(Math.min(currentHouseSavings, GOALS.house.target));
+            }
+            return { carProjected, houseProjected };
+        }
+
+
+        // Render chart
+        function renderChart() {
+            const { carProjected, houseProjected } = getProjectedData();
+            const labels = Array.from({ length: TOTAL_MONTHS_TO_PLOT + 1 }, (_, i) => `M${i}`);
+
+            const data = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `${GOALS.car.name} (Projected Path)`,
+                        data: carProjected,
+                        borderColor: GOALS.car.borderColor,
+                        backgroundColor: GOALS.car.color,
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 2,
+                        pointHoverRadius: 5
+                    },
+                    {
+                        label: `${GOALS.house.name} (Projected Path)`,
+                        data: houseProjected,
+                        borderColor: GOALS.house.borderColor,
+                        backgroundColor: GOALS.house.color,
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 2,
+                        pointHoverRadius: 5
+                    }
+                ]
+            };
+
+            if (savingsChart) {
+                savingsChart.data = data;
+                savingsChart.update();
+            } else {
+                savingsChart = new Chart(chartCanvas, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Important for fitting chart to container height
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Amount Saved (€)'
+                                },
+                                ticks: {
+                                    callback: function (value) {
+                                        return '€' + value.toLocaleString();
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Months From Start'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += '€' + context.parsed.y.toLocaleString();
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Event Listeners
+        carSavedAmountInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            currentSaved.car = isNaN(value) || value < 0 ? 0 : value;
+            updateDisplay();
+        });
+
+        houseSavedAmountInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            currentSaved.house = isNaN(value) || value < 0 ? 0 : value;
+            updateDisplay();
+        });
+
+        resetDataButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all saved data? This cannot be undone.')) {
+                currentSaved.car = 0;
+                currentSaved.house = 0;
+                updateDisplay();
+                localStorage.removeItem('savingsTrackerNabi');
+            }
+        });
+
+        // Initial setup
+        function init() {
+            loadData();
+            updateDisplay();
+        }
+
+        init();
+
+    </script>
+</body>
+
+</html>
