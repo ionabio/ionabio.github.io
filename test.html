@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Compass Calibration Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for radio buttons */
+        .radio-input {
+            display: none;
+        }
+        .radio-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f3f4f6; /* gray-200 */
+            color: #374151; /* gray-700 */
+            transition: all 0.2s ease-in-out;
+            font-weight: 600;
+        }
+        .radio-input:checked + .radio-label {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .section-card {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
+            <header class="text-center mb-6">
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Daily Compass Calibration Test</h1>
+                <p class="text-slate-500 mt-2">Reflect on your day and rate your automatic reaction to these specific scenarios. A lower score is better.</p>
+            </header>
+            
+            <!-- Questions Container -->
+            <div id="questions-container" class="space-y-6">
+                <!-- Question 1 -->
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-4">1. Reacting to a Trigger:</p>
+                    <p class="text-sm text-slate-600 mb-4">When a moment of loneliness or sadness was triggered today, how strongly did my thoughts automatically spiral into self-criticism (e.g., "I'm a failure")?</p>
+                    <div class="flex justify-around items-center" data-question="1">
+                        <input type="radio" id="q1-1" name="q1" value="1" class="radio-input"><label for="q1-1" class="radio-label">1</label>
+                        <input type="radio" id="q1-2" name="q1" value="2" class="radio-input"><label for="q1-2" class="radio-label">2</label>
+                        <input type="radio" id="q1-3" name="q1" value="3" class="radio-input"><label for="q1-3" class="radio-label">3</label>
+                        <input type="radio" id="q1-4" name="q1" value="4" class="radio-input"><label for="q1-4" class="radio-label">4</label>
+                        <input type="radio" id="q1-5" name="q1" value="5" class="radio-input"><label for="q1-5" class="radio-label">5</label>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-4">2. Reacting to Imperfection:</p>
+                    <p class="text-sm text-slate-600 mb-4">When I made a mistake or felt imperfect today (at work, in a hobby), how loud was the automatic inner voice that called me a 'loser' or 'failure'?</p>
+                    <div class="flex justify-around items-center" data-question="2">
+                        <input type="radio" id="q2-1" name="q2" value="1" class="radio-input"><label for="q2-1" class="radio-label">1</label>
+                        <input type="radio" id="q2-2" name="q2" value="2" class="radio-input"><label for="q2-2" class="radio-label">2</label>
+                        <input type="radio" id="q2-3" name="q2" value="3" class="radio-input"><label for="q2-3" class="radio-label">3</label>
+                        <input type="radio" id="q2-4" name="q2" value="4" class="radio-input"><label for="q2-4" class="radio-label">4</label>
+                        <input type="radio" id="q2-5" name="q2" value="5" class="radio-input"><label for="q2-5" class="radio-label">5</label>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-4">3. Ignoring Body Signals:</p>
+                    <p class="text-sm text-slate-600 mb-4">Think of a conversation today. If I felt a knot in my stomach or tension, how strongly did I automatically ignore that feeling and just 'push through'?</p>
+                    <div class="flex justify-around items-center" data-question="3">
+                        <input type="radio" id="q3-1" name="q3" value="1" class="radio-input"><label for="q3-1" class="radio-label">1</label>
+                        <input type="radio" id="q3-2" name="q3" value="2" class="radio-input"><label for="q3-2" class="radio-label">2</label>
+                        <input type="radio" id="q3-3" name="q3" value="3" class="radio-input"><label for="q3-3" class="radio-label">3</label>
+                        <input type="radio" id="q3-4" name="q3" value="4" class="radio-input"><label for="q3-4" class="radio-label">4</label>
+                        <input type="radio" id="q3-5" name="q3" value="5" class="radio-input"><label for="q3-5" class="radio-label">5</label>
+                    </div>
+                </div>
+
+                <!-- Question 4 -->
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-4">4. Ignoring Fatigue:</p>
+                    <p class="text-sm text-slate-600 mb-4">When I felt tired or drained today, how strongly did the impulse to do what I 'should' do win out over my actual need for a break or rest?</p>
+                    <div class="flex justify-around items-center" data-question="4">
+                        <input type="radio" id="q4-1" name="q4" value="1" class="radio-input"><label for="q4-1" class="radio-label">1</label>
+                        <input type="radio" id="q4-2" name="q4" value="2" class="radio-input"><label for="q4-2" class="radio-label">2</label>
+                        <input type="radio" id="q4-3" name="q4" value="3" class="radio-input"><label for="q4-3" class="radio-label">3</label>
+                        <input type="radio" id="q4-4" name="q4" value="4" class="radio-input"><label for="q4-4" class="radio-label">4</label>
+                        <input type="radio" id="q4-5" name="q4" value="5" class="radio-input"><label for="q4-5" class="radio-label">5</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Obsidian Output -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <div class="text-center">
+                <h2 class="text-xl font-bold text-slate-800">Total Fault Score</h2>
+                <p id="total-score" class="text-5xl font-bold text-blue-500 my-3">0 / 20</p>
+                <p class="text-slate-500 text-sm">A lower score means your new awareness was stronger.</p>
+            </div>
+            
+            <div class="mt-8">
+                 <button id="generate-btn" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 disabled:bg-slate-400" disabled>
+                    Generate Obsidian Summary
+                </button>
+            </div>
+
+            <div id="obsidian-output" class="mt-6 hidden">
+                <label for="obsidian-text" class="block text-sm font-medium text-slate-700 mb-2">Copy this into your daily note:</label>
+                <textarea id="obsidian-text" rows="10" class="w-full p-3 bg-slate-100 border border-slate-300 rounded-lg text-sm text-slate-800 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <button id="copy-btn" class="mt-3 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionsContainer = document.getElementById('questions-container');
+        const totalScoreEl = document.getElementById('total-score');
+        const generateBtn = document.getElementById('generate-btn');
+        const obsidianOutput = document.getElementById('obsidian-output');
+        const obsidianText = document.getElementById('obsidian-text');
+        const copyBtn = document.getElementById('copy-btn');
+
+        let scores = { q1: 0, q2: 0, q3: 0, q4: 0 };
+        let answeredQuestions = 0;
+
+        // Function to calculate and update the total score
+        const updateTotalScore = () => {
+            const total = Object.values(scores).reduce((sum, val) => sum + val, 0);
+            totalScoreEl.textContent = `${total} / 20`;
+            
+            // Enable generate button only when all questions are answered
+            if (answeredQuestions === 4) {
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('disabled:bg-slate-400');
+            }
+        };
+
+        // Event listener for all radio buttons
+        questionsContainer.addEventListener('change', (e) => {
+            if (e.target.type === 'radio') {
+                const questionName = e.target.name;
+                const scoreValue = parseInt(e.target.value, 10);
+                
+                if (scores[questionName] === 0) {
+                    answeredQuestions++;
+                }
+                scores[questionName] = scoreValue;
+                updateTotalScore();
+            }
+        });
+
+        // Event listener for the generate button
+        generateBtn.addEventListener('click', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+
+            const createProgressBar = (score) => {
+                const filled = '■';
+                const empty = '□';
+                return filled.repeat(score) + empty.repeat(5 - score);
+            };
+
+            const summary = `
+### 🧭 Compass Calibration Score
+**Date:** ${dateString}
+**Total Fault Score:** ${totalScoreEl.textContent.split(' ')[0]}/20
+
+- **Trigger Reaction:** ${scores.q1}/5 ${createProgressBar(scores.q1)}
+- **Imperfection Reaction:** ${scores.q2}/5 ${createProgressBar(scores.q2)}
+- **Ignoring Body Signals:** ${scores.q3}/5 ${createProgressBar(scores.q3)}
+- **Ignoring Fatigue:** ${scores.q4}/5 ${createProgressBar(scores.q4)}
+
+---
+#### Daily Reflection
+- 
+`;
+            obsidianText.value = summary.trim();
+            obsidianOutput.classList.remove('hidden');
+        });
+
+        // Event listener for the copy button
+        copyBtn.addEventListener('click', () => {
+            obsidianText.select();
+            // Using document.execCommand as navigator.clipboard can be restricted in iframes
+            try {
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy to Clipboard';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                copyBtn.textContent = 'Error Copying';
+            }
+        });
+
+    </script>
+</body>
+</html>
