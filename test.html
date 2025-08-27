@@ -3,126 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Compass Calibration Test</title>
+    <title>Comprehensive Daily Self-Assessment</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom styles for radio buttons */
-        .radio-input {
-            display: none;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .radio-input { display: none; }
         .radio-label {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #f3f4f6; /* gray-200 */
-            color: #374151; /* gray-700 */
-            transition: all 0.2s ease-in-out;
-            font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%;
+            background-color: #f3f4f6; color: #374151;
+            transition: all 0.2s ease-in-out; font-weight: 600;
         }
-        .radio-input:checked + .radio-label {
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        .radio-input.fault:checked + .radio-label {
+            background-color: #ef4444; /* red-500 */ color: white;
+            transform: scale(1.1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
-        .section-card {
-            transition: all 0.3s ease-in-out;
+        .radio-input.growth:checked + .radio-label {
+            background-color: #10b981; /* emerald-500 */ color: white;
+            transform: scale(1.1); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        .section-card { transition: all 0.3s ease-in-out; }
+        .result-zone {
+            padding: 1rem; border-radius: 0.75rem; margin-top: 1.5rem;
+            border-left-width: 4px; text-align: left;
         }
     </style>
 </head>
 <body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-2xl mx-auto">
+    <div class="w-full max-w-3xl mx-auto">
+        <header class="text-center mb-6 bg-white p-6 rounded-2xl shadow-lg">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Comprehensive Daily Self-Assessment</h1>
+            <p class="text-slate-500 mt-2">A daily practice to weaken the old compass and strengthen the new one.</p>
+        </header>
+
+        <!-- Part 1: Faulty Compass -->
         <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
-            <header class="text-center mb-6">
-                <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Daily Compass Calibration Test</h1>
-                <p class="text-slate-500 mt-2">Reflect on your day and rate your automatic reaction to these specific scenarios. A lower score is better.</p>
-            </header>
-            
-            <!-- Questions Container -->
-            <div id="questions-container" class="space-y-6">
-                <!-- Question 1 -->
+            <h2 class="text-xl font-bold text-slate-800 border-b-2 border-red-300 pb-2 mb-4">Part 1: The Faulty Compass Score (Goal: ↓ Lower this score)</h2>
+            <p class="text-sm text-slate-600 mb-6">Rate the strength of old, automatic patterns today (1=Very Weak, 5=Very Strong).</p>
+            <div id="fault-questions" class="space-y-6">
                 <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
-                    <p class="font-semibold text-slate-700 mb-4">1. Reacting to a Trigger:</p>
-                    <p class="text-sm text-slate-600 mb-4">When a moment of loneliness or sadness was triggered today, how strongly did my thoughts automatically spiral into self-criticism (e.g., "I'm a failure")?</p>
-                    <div class="flex justify-around items-center" data-question="1">
-                        <input type="radio" id="q1-1" name="q1" value="1" class="radio-input"><label for="q1-1" class="radio-label">1</label>
-                        <input type="radio" id="q1-2" name="q1" value="2" class="radio-input"><label for="q1-2" class="radio-label">2</label>
-                        <input type="radio" id="q1-3" name="q1" value="3" class="radio-input"><label for="q1-3" class="radio-label">3</label>
-                        <input type="radio" id="q1-4" name="q1" value="4" class="radio-input"><label for="q1-4" class="radio-label">4</label>
-                        <input type="radio" id="q1-5" name="q1" value="5" class="radio-input"><label for="q1-5" class="radio-label">5</label>
+                    <p class="font-semibold text-slate-700 mb-2">1. Spiraling Thoughts:</p>
+                    <p class="text-sm text-slate-600 mb-4">When a trigger (e.g., seeing a happy couple) caused a pang of loneliness, how strongly did my mind automatically spiral into thoughts of being a "failure" or "unlovable"?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="fq1-1" name="fq1" value="1" class="radio-input fault"><label for="fq1-1" class="radio-label">1</label>
+                        <input type="radio" id="fq1-2" name="fq1" value="2" class="radio-input fault"><label for="fq1-2" class="radio-label">2</label>
+                        <input type="radio" id="fq1-3" name="fq1" value="3" class="radio-input fault"><label for="fq1-3" class="radio-label">3</label>
+                        <input type="radio" id="fq1-4" name="fq1" value="4" class="radio-input fault"><label for="fq1-4" class="radio-label">4</label>
+                        <input type="radio" id="fq1-5" name="fq1" value="5" class="radio-input fault"><label for="fq1-5" class="radio-label">5</label>
                     </div>
                 </div>
-
-                <!-- Question 2 -->
                 <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
-                    <p class="font-semibold text-slate-700 mb-4">2. Reacting to Imperfection:</p>
-                    <p class="text-sm text-slate-600 mb-4">When I made a mistake or felt imperfect today (at work, in a hobby), how loud was the automatic inner voice that called me a 'loser' or 'failure'?</p>
-                    <div class="flex justify-around items-center" data-question="2">
-                        <input type="radio" id="q2-1" name="q2" value="1" class="radio-input"><label for="q2-1" class="radio-label">1</label>
-                        <input type="radio" id="q2-2" name="q2" value="2" class="radio-input"><label for="q2-2" class="radio-label">2</label>
-                        <input type="radio" id="q2-3" name="q2" value="3" class="radio-input"><label for="q2-3" class="radio-label">3</label>
-                        <input type="radio" id="q2-4" name="q2" value="4" class="radio-input"><label for="q2-4" class="radio-label">4</label>
-                        <input type="radio" id="q2-5" name="q2" value="5" class="radio-input"><label for="q2-5" class="radio-label">5</label>
+                    <p class="font-semibold text-slate-700 mb-2">2. Comparison to Others:</p>
+                    <p class="text-sm text-slate-600 mb-4">How much mental energy did I spend today comparing my life (age, relationship status) to others and feeling "behind" or "less than"?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="fq2-1" name="fq2" value="1" class="radio-input fault"><label for="fq2-1" class="radio-label">1</label>
+                        <input type="radio" id="fq2-2" name="fq2" value="2" class="radio-input fault"><label for="fq2-2" class="radio-label">2</label>
+                        <input type="radio" id="fq2-3" name="fq2" value="3" class="radio-input fault"><label for="fq2-3" class="radio-label">3</label>
+                        <input type="radio" id="fq2-4" name="fq2" value="4" class="radio-input fault"><label for="fq2-4" class="radio-label">4</label>
+                        <input type="radio" id="fq2-5" name="fq2" value="5" class="radio-input fault"><label for="fq2-5" class="radio-label">5</label>
                     </div>
                 </div>
-
-                <!-- Question 3 -->
                 <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
-                    <p class="font-semibold text-slate-700 mb-4">3. Ignoring Body Signals:</p>
-                    <p class="text-sm text-slate-600 mb-4">Think of a conversation today. If I felt a knot in my stomach or tension, how strongly did I automatically ignore that feeling and just 'push through'?</p>
-                    <div class="flex justify-around items-center" data-question="3">
-                        <input type="radio" id="q3-1" name="q3" value="1" class="radio-input"><label for="q3-1" class="radio-label">1</label>
-                        <input type="radio" id="q3-2" name="q3" value="2" class="radio-input"><label for="q3-2" class="radio-label">2</label>
-                        <input type="radio" id="q3-3" name="q3" value="3" class="radio-input"><label for="q3-3" class="radio-label">3</label>
-                        <input type="radio" id="q3-4" name="q3" value="4" class="radio-input"><label for="q3-4" class="radio-label">4</label>
-                        <input type="radio" id="q3-5" name="q3" value="5" class="radio-input"><label for="q3-5" class="radio-label">5</label>
+                    <p class="font-semibold text-slate-700 mb-2">3. Inner Critic After a Mistake:</p>
+                    <p class="text-sm text-slate-600 mb-4">When I made a small mistake (at work, in a hobby), how loud was the automatic inner voice that called me a 'loser' or 'incompetent'?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="fq3-1" name="fq3" value="1" class="radio-input fault"><label for="fq3-1" class="radio-label">1</label>
+                        <input type="radio" id="fq3-2" name="fq3" value="2" class="radio-input fault"><label for="fq3-2" class="radio-label">2</label>
+                        <input type="radio" id="fq3-3" name="fq3" value="3" class="radio-input fault"><label for="fq3-3" class="radio-label">3</label>
+                        <input type="radio" id="fq3-4" name="fq3" value="4" class="radio-input fault"><label for="fq3-4" class="radio-label">4</label>
+                        <input type="radio" id="fq3-5" name="fq3" value="5" class="radio-input fault"><label for="fq3-5" class="radio-label">5</label>
                     </div>
                 </div>
-
-                <!-- Question 4 -->
                 <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
-                    <p class="font-semibold text-slate-700 mb-4">4. Ignoring Fatigue:</p>
-                    <p class="text-sm text-slate-600 mb-4">When I felt tired or drained today, how strongly did the impulse to do what I 'should' do win out over my actual need for a break or rest?</p>
-                    <div class="flex justify-around items-center" data-question="4">
-                        <input type="radio" id="q4-1" name="q4" value="1" class="radio-input"><label for="q4-1" class="radio-label">1</label>
-                        <input type="radio" id="q4-2" name="q4" value="2" class="radio-input"><label for="q4-2" class="radio-label">2</label>
-                        <input type="radio" id="q4-3" name="q4" value="3" class="radio-input"><label for="q4-3" class="radio-label">3</label>
-                        <input type="radio" id="q4-4" name="q4" value="4" class="radio-input"><label for="q4-4" class="radio-label">4</label>
-                        <input type="radio" id="q4-5" name="q4" value="5" class="radio-input"><label for="q4-5" class="radio-label">5</label>
+                    <p class="font-semibold text-slate-700 mb-2">4. Ignoring "Unsafe" Feelings:</p>
+                    <p class="text-sm text-slate-600 mb-4">In a conversation or interaction, if I felt a knot in my stomach or tension, how strongly did I automatically ignore that feeling and just "push through"?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="fq4-1" name="fq4" value="1" class="radio-input fault"><label for="fq4-1" class="radio-label">1</label>
+                        <input type="radio" id="fq4-2" name="fq4" value="2" class="radio-input fault"><label for="fq4-2" class="radio-label">2</label>
+                        <input type="radio" id="fq4-3" name="fq4" value="3" class="radio-input fault"><label for="fq4-3" class="radio-label">3</label>
+                        <input type="radio" id="fq4-4" name="fq4" value="4" class="radio-input fault"><label for="fq4-4" class="radio-label">4</label>
+                        <input type="radio" id="fq4-5" name="fq4" value="5" class="radio-input fault"><label for="fq4-5" class="radio-label">5</label>
+                    </div>
+                </div>
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-2">5. Ruminating on the Past:</p>
+                    <p class="text-sm text-slate-600 mb-4">How much of my free mental time today was spent replaying past hurts, rejections, or negative interactions?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="fq5-1" name="fq5" value="1" class="radio-input fault"><label for="fq5-1" class="radio-label">1</label>
+                        <input type="radio" id="fq5-2" name="fq5" value="2" class="radio-input fault"><label for="fq5-2" class="radio-label">2</label>
+                        <input type="radio" id="fq5-3" name="fq5" value="3" class="radio-input fault"><label for="fq5-3" class="radio-label">3</label>
+                        <input type="radio" id="fq5-4" name="fq5" value="4" class="radio-input fault"><label for="fq5-4" class="radio-label">4</label>
+                        <input type="radio" id="fq5-5" name="fq5" value="5" class="radio-input fault"><label for="fq5-5" class="radio-label">5</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 2: New Compass -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
+            <h2 class="text-xl font-bold text-slate-800 border-b-2 border-green-300 pb-2 mb-4">Part 2: The New Compass Score (Goal: ↑ Raise this score)</h2>
+            <p class="text-sm text-slate-600 mb-6">Rate your practice of new, conscious actions today (1=Not at all, 5=Consistently).</p>
+            <div id="growth-questions" class="space-y-6">
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-2">1. Observing Emotions with Distance:</p>
+                    <p class="text-sm text-slate-600 mb-4">When a painful feeling arose, how often was I able to pause and say to myself, "I am *feeling* sadness," instead of just becoming the sadness?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="gq1-1" name="gq1" value="1" class="radio-input growth"><label for="gq1-1" class="radio-label">1</label>
+                        <input type="radio" id="gq1-2" name="gq1" value="2" class="radio-input growth"><label for="gq1-2" class="radio-label">2</label>
+                        <input type="radio" id="gq1-3" name="gq1" value="3" class="radio-input growth"><label for="gq1-3" class="radio-label">3</label>
+                        <input type="radio" id="gq1-4" name="gq1" value="4" class="radio-input growth"><label for="gq1-4" class="radio-label">4</label>
+                        <input type="radio" id="gq1-5" name="gq1" value="5" class="radio-input growth"><label for="gq1-5" class="radio-label">5</label>
+                    </div>
+                </div>
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-2">2. Intentional Self-Care:</p>
+                    <p class="text-sm text-slate-600 mb-4">How intentionally did I engage in an activity purely for my own well-being today (e.g., exercise, reading, art, piano, quality time with Juno/Bluey)?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="gq2-1" name="gq2" value="1" class="radio-input growth"><label for="gq2-1" class="radio-label">1</label>
+                        <input type="radio" id="gq2-2" name="gq2" value="2" class="radio-input growth"><label for="gq2-2" class="radio-label">2</label>
+                        <input type="radio" id="gq2-3" name="gq2" value="3" class="radio-input growth"><label for="gq2-3" class="radio-label">3</label>
+                        <input type="radio" id="gq2-4" name="gq2" value="4" class="radio-input growth"><label for="gq2-4" class="radio-label">4</label>
+                        <input type="radio" id="gq2-5" name="gq2" value="5" class="radio-input growth"><label for="gq2-5" class="radio-label">5</label>
+                    </div>
+                </div>
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-2">3. Acknowledging My Value:</p>
+                    <p class="text-sm text-slate-600 mb-4">How often did I take a moment to consciously acknowledge a strength, a skill I used (e.g., solving a C++ problem), or a kind act I did?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="gq3-1" name="gq3" value="1" class="radio-input growth"><label for="gq3-1" class="radio-label">1</label>
+                        <input type="radio" id="gq3-2" name="gq3" value="2" class="radio-input growth"><label for="gq3-2" class="radio-label">2</label>
+                        <input type="radio" id="gq3-3" name="gq3" value="3" class="radio-input growth"><label for="gq3-3" class="radio-label">3</label>
+                        <input type="radio" id="gq3-4" name="gq3" value="4" class="radio-input growth"><label for="gq3-4" class="radio-label">4</label>
+                        <input type="radio" id="gq3-5" name="gq3" value="5" class="radio-input growth"><label for="gq3-5" class="radio-label">5</label>
+                    </div>
+                </div>
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-2">4. Practicing Gentle Boundaries:</p>
+                    <p class="text-sm text-slate-600 mb-4">How well did I make a small choice to protect my energy or peace today (e.g., not answering a text immediately, changing an uncomfortable topic)?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="gq4-1" name="gq4" value="1" class="radio-input growth"><label for="gq4-1" class="radio-label">1</label>
+                        <input type="radio" id="gq4-2" name="gq4" value="2" class="radio-input growth"><label for="gq4-2" class="radio-label">2</label>
+                        <input type="radio" id="gq4-3" name="gq4" value="3" class="radio-input growth"><label for="gq4-3" class="radio-label">3</label>
+                        <input type="radio" id="gq4-4" name="gq4" value="4" class="radio-input growth"><label for="gq4-4" class="radio-label">4</label>
+                        <input type="radio" id="gq4-5" name="gq4" value="5" class="radio-input growth"><label for="gq4-5" class="radio-label">5</label>
+                    </div>
+                </div>
+                <div class="section-card bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <p class="font-semibold text-slate-700 mb-2">5. Choosing Based on "Safety":</p>
+                    <p class="text-sm text-slate-600 mb-4">How often did I make a choice—even a small one—based on what felt genuinely calm and safe, rather than what I felt I "should" do?</p>
+                    <div class="flex justify-around items-center">
+                        <input type="radio" id="gq5-1" name="gq5" value="1" class="radio-input growth"><label for="gq5-1" class="radio-label">1</label>
+                        <input type="radio" id="gq5-2" name="gq5" value="2" class="radio-input growth"><label for="gq5-2" class="radio-label">2</label>
+                        <input type="radio" id="gq5-3" name="gq5" value="3" class="radio-input growth"><label for="gq5-3" class="radio-label">3</label>
+                        <input type="radio" id="gq5-4" name="gq5" value="4" class="radio-input growth"><label for="gq5-4" class="radio-label">4</label>
+                        <input type="radio" id="gq5-5" name="gq5" value="5" class="radio-input growth"><label for="gq5-5" class="radio-label">5</label>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Results and Obsidian Output -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        <div id="results-section" class="bg-white rounded-2xl shadow-lg p-6 md:p-8 hidden">
             <div class="text-center">
-                <h2 class="text-xl font-bold text-slate-800">Total Fault Score</h2>
-                <p id="total-score" class="text-5xl font-bold text-blue-500 my-3">0 / 20</p>
-                <p class="text-slate-500 text-sm">A lower score means your new awareness was stronger.</p>
+                <h2 class="text-2xl font-bold text-slate-800">Today's Assessment</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-red-600">Fault Score</h3>
+                    <p id="total-fault-score" class="text-4xl font-bold text-red-500 my-2">0 / 25</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-green-600">Growth Score</h3>
+                    <p id="total-growth-score" class="text-4xl font-bold text-green-500 my-2">0 / 25</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-blue-600">Net Progress</h3>
+                    <p id="net-score" class="text-4xl font-bold text-blue-500 my-2">0</p>
+                </div>
             </div>
             
+            <div id="result-interpretation"></div>
+
             <div class="mt-8">
-                 <button id="generate-btn" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 disabled:bg-slate-400" disabled>
+                <button id="generate-btn" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition-colors">
                     Generate Obsidian Summary
                 </button>
             </div>
 
             <div id="obsidian-output" class="mt-6 hidden">
                 <label for="obsidian-text" class="block text-sm font-medium text-slate-700 mb-2">Copy this into your daily note:</label>
-                <textarea id="obsidian-text" rows="10" class="w-full p-3 bg-slate-100 border border-slate-300 rounded-lg text-sm text-slate-800 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-                <button id="copy-btn" class="mt-3 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                <textarea id="obsidian-text" rows="18" class="w-full p-3 bg-slate-100 border border-slate-300 rounded-lg text-sm text-slate-800 font-mono"></textarea>
+                <button id="copy-btn" class="mt-3 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     Copy to Clipboard
                 </button>
             </div>
@@ -130,90 +205,126 @@
     </div>
 
     <script>
-        const questionsContainer = document.getElementById('questions-container');
-        const totalScoreEl = document.getElementById('total-score');
+        const faultQuestions = document.getElementById('fault-questions');
+        const growthQuestions = document.getElementById('growth-questions');
+        const resultsSection = document.getElementById('results-section');
+        const totalFaultScoreEl = document.getElementById('total-fault-score');
+        const totalGrowthScoreEl = document.getElementById('total-growth-score');
+        const netScoreEl = document.getElementById('net-score');
+        const resultInterpretationEl = document.getElementById('result-interpretation');
         const generateBtn = document.getElementById('generate-btn');
         const obsidianOutput = document.getElementById('obsidian-output');
         const obsidianText = document.getElementById('obsidian-text');
         const copyBtn = document.getElementById('copy-btn');
 
-        let scores = { q1: 0, q2: 0, q3: 0, q4: 0 };
+        let faultScores = { fq1: 0, fq2: 0, fq3: 0, fq4: 0, fq5: 0 };
+        let growthScores = { gq1: 0, gq2: 0, gq3: 0, gq4: 0, gq5: 0 };
+        const totalQuestions = 10;
         let answeredQuestions = 0;
 
-        // Function to calculate and update the total score
-        const updateTotalScore = () => {
-            const total = Object.values(scores).reduce((sum, val) => sum + val, 0);
-            totalScoreEl.textContent = `${total} / 20`;
-            
-            // Enable generate button only when all questions are answered
-            if (answeredQuestions === 4) {
-                generateBtn.disabled = false;
-                generateBtn.classList.remove('disabled:bg-slate-400');
+        const checkAllAnswered = () => {
+            if (answeredQuestions === totalQuestions) {
+                resultsSection.classList.remove('hidden');
+                calculateScores();
             }
         };
 
-        // Event listener for all radio buttons
-        questionsContainer.addEventListener('change', (e) => {
+        const scoreListener = (e, scoreObject) => {
             if (e.target.type === 'radio') {
                 const questionName = e.target.name;
                 const scoreValue = parseInt(e.target.value, 10);
-                
-                if (scores[questionName] === 0) {
+                if (scoreObject[questionName] === 0) {
                     answeredQuestions++;
                 }
-                scores[questionName] = scoreValue;
-                updateTotalScore();
+                scoreObject[questionName] = scoreValue;
+                checkAllAnswered();
             }
-        });
+        };
 
-        // Event listener for the generate button
+        faultQuestions.addEventListener('change', (e) => scoreListener(e, faultScores));
+        growthQuestions.addEventListener('change', (e) => scoreListener(e, growthScores));
+        
+        const calculateScores = () => {
+            const totalFault = Object.values(faultScores).reduce((s, v) => s + v, 0);
+            const totalGrowth = Object.values(growthScores).reduce((s, v) => s + v, 0);
+            const netScore = totalGrowth - totalFault;
+
+            totalFaultScoreEl.textContent = `${totalFault} / 25`;
+            totalGrowthScoreEl.textContent = `${totalGrowth} / 25`;
+            netScoreEl.textContent = `${netScore}`;
+            if(netScore > 0) netScoreEl.textContent = `+${netScore}`;
+
+
+            let zoneTitle, zoneDescription, zoneClass;
+
+            if (netScore < 0) {
+                zoneTitle = "Deep Recalibration Zone";
+                zoneDescription = "The old compass is still dominant. This is the hardest phase, focused on building awareness without judgment. Your only goal here is to keep showing up and answering these questions honestly. This is courageous work.";
+                zoneClass = "bg-red-100 border-red-500 text-red-800";
+            } else if (netScore >= 0 && netScore <= 10) {
+                zoneTitle = "Building Momentum Zone";
+                zoneDescription = "You are in the heart of the change. You're consciously choosing the new compass more often, even though the old one is still loud. Progress here is not linear, but every point in this zone is a victory. Stay consistent.";
+                zoneClass = "bg-yellow-100 border-yellow-500 text-yellow-800";
+            } else { // netScore > 10
+                zoneTitle = "Navigating with Trust Zone";
+                zoneDescription = "Your new compass is now your primary guide. You trust your ability to navigate your feelings and make choices that honor your well-being. This is the state of being 'ready'—not perfection, but a deep, earned trust in yourself.";
+                zoneClass = "bg-green-100 border-green-500 text-green-800";
+            }
+
+            resultInterpretationEl.innerHTML = `
+                <div class="result-zone ${zoneClass}">
+                    <h3 class="font-bold">${zoneTitle}</h3>
+                    <p class="text-sm mt-1">${zoneDescription}</p>
+                </div>
+            `;
+        };
+
         generateBtn.addEventListener('click', () => {
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const dateString = `${year}-${month}-${day}`;
-
-            const createProgressBar = (score) => {
-                const filled = '■';
-                const empty = '□';
-                return filled.repeat(score) + empty.repeat(5 - score);
+            const dateString = today.toISOString().split('T')[0];
+            const totalFault = Object.values(faultScores).reduce((s, v) => s + v, 0);
+            const totalGrowth = Object.values(growthScores).reduce((s, v) => s + v, 0);
+            const netScore = totalGrowth - totalFault;
+            
+            const createProgressBar = (score, maxScore, length = 12) => {
+                const filledCount = Math.round((score / maxScore) * length);
+                const filled = '█'.repeat(filledCount);
+                const empty = '░'.repeat(length - filledCount);
+                return `\`${filled}${empty}\``;
             };
 
-            const summary = `
-### 🧭 Compass Calibration Score
-**Date:** ${dateString}
-**Total Fault Score:** ${totalScoreEl.textContent.split(' ')[0]}/20
-
-- **Trigger Reaction:** ${scores.q1}/5 ${createProgressBar(scores.q1)}
-- **Imperfection Reaction:** ${scores.q2}/5 ${createProgressBar(scores.q2)}
-- **Ignoring Body Signals:** ${scores.q3}/5 ${createProgressBar(scores.q3)}
-- **Ignoring Fatigue:** ${scores.q4}/5 ${createProgressBar(scores.q4)}
-
----
-#### Daily Reflection
-- 
+            const summary = `> [!NOTE] Daily Self-Assessment Summary
+> **Date:** ${dateString}
+>
+> ### Scores
+> | Category | Score | Goal | Progress Bar |
+> | :--- | :---: | :--- | :--- |
+> | **Faulty Compass** | ${totalFault} / 25 | Lower Score ↓ | ${createProgressBar(totalFault, 25)} |
+> | **New Compass** | ${totalGrowth} / 25 | Raise Score ↑ | ${createProgressBar(totalGrowth, 25)} |
+> | **Net Progress** | **${netScore > 0 ? '+' : ''}${netScore}** | | |
+>
+> ---
+> ### Today's Zone: ${resultInterpretationEl.querySelector('h3').textContent}
+> ${resultInterpretationEl.querySelector('p').textContent}
+>
+> ---
+> ### Daily Reflection
+> - 
 `;
             obsidianText.value = summary.trim();
             obsidianOutput.classList.remove('hidden');
         });
 
-        // Event listener for the copy button
         copyBtn.addEventListener('click', () => {
             obsidianText.select();
-            // Using document.execCommand as navigator.clipboard can be restricted in iframes
             try {
                 document.execCommand('copy');
                 copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy to Clipboard';
-                }, 2000);
+                setTimeout(() => { copyBtn.textContent = 'Copy to Clipboard'; }, 2000);
             } catch (err) {
-                console.error('Failed to copy text: ', err);
                 copyBtn.textContent = 'Error Copying';
             }
         });
-
     </script>
 </body>
 </html>
