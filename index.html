@@ -1,101 +1,219 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nabi.be - Personal Page and Works</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: radial-gradient(circle, #ffcccb, #b0e0e6, #e6e6fa);
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite;
-        }
-        @keyframes gradientAnimation {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-        .content-frame {
-            background-color: white;
-            border: 2px solid black;
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 0.5em;
-            background: linear-gradient(45deg, #FFB3BA, #BAFFC9, #BAE1FF, #FFFFBA);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-            animation: textGradientAnimation 15s ease infinite;
-            position: relative;
-            display: inline-block;
-        }
-        h1::before {
-            content: attr(data-text);
-            position: absolute;
-            left: -2px;
-            top: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #FFB3BA, #BAFFC9, #BAE1FF, #FFFFBA);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-            animation: textGradientAnimation 15s ease infinite;
-            -webkit-text-stroke: 2px black;
-        }
-        @keyframes textGradientAnimation {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-        p {
-            font-size: 1.2em;
-            margin: 0.5em 0;
-            color: #666;
-        }
-        a {
-            color: #0066cc; /* Changed to a standard blue color */
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        a:hover {
-            color: #004499; /* Darker blue on hover */
-            text-decoration: underline; /* Added underline on hover */
-        }
-    </style>
-</head>
-<body>
-    <div class="content-frame">
-        <h1 data-text="nabi.be">nabi.be</h1>
-        <p>My personal page and works</p>
-        <p><a href="http://nabi.be/sudokuPad">Sudoku pad NYT link generator</a></p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f6f2" />
+    <meta
+      name="description"
+      content="A small corner of the internet for useful tools, playful experiments, and things made out of curiosity. Explore projects at nabi.be."
+    />
+    <meta property="og:title" content="nabi.be — A place for curious things" />
+    <meta
+      property="og:description"
+      content="Useful tools, playful experiments, and a little room for whatever comes next."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nabi.be/" />
+    <link rel="canonical" href="https://nabi.be/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>nabi.be — A place for curious things</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="wordmark" href="/" aria-label="nabi.be home"
+          >nabi<span class="wordmark-dot">.</span
+          ><span class="wordmark-domain">be</span></a
+        >
+        <nav aria-label="Main navigation">
+          <a href="#projects">Projects</a>
+          <a href="#about">About</a>
+          <a class="github-link" href="https://github.com/ionabio"
+            >GitHub <span aria-hidden="true">↗</span></a
+          >
+        </nav>
+      </header>
+
+      <main id="main">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <p class="eyebrow">
+              <span class="small-spark" aria-hidden="true">✳</span> A PERSONAL
+              WORKSHOP
+            </p>
+            <h1 id="hero-title">A place for<br />curious <em>things.</em></h1>
+            <p class="hero-description">
+              Useful little tools. Playful experiments.<br />A few ideas turned
+              into something you can use.
+            </p>
+            <a class="button" href="#projects"
+              >Explore the projects <span aria-hidden="true">↘</span></a
+            >
+            <p class="hero-footnote">Made out of curiosity. Shared with you.</p>
+          </div>
+          <div class="workshop-art" aria-hidden="true">
+            <div class="art-caption">
+              <span class="status-dot"></span> IDEAS IN ORBIT
+            </div>
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="orbit-center"><span>n.</span></div>
+            <div class="floating-tile code-tile">&lt;/&gt;</div>
+            <div class="floating-tile puzzle-tile">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="floating-tile spark-tile">✳</div>
+            <span class="orbit-dot dot-one"></span
+            ><span class="orbit-dot dot-two"></span>
+            <span class="art-plus plus-one">+</span
+            ><span class="art-plus plus-two">+</span>
+            <div class="art-note">
+              a little code, a little possibility <span>↗</span>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="projects-section"
+          id="projects"
+          aria-labelledby="projects-title"
+        >
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">THE WORKBENCH</p>
+              <h2 id="projects-title">Small projects. Real possibilities.</h2>
+            </div>
+            <span class="section-aside"
+              >A growing collection <span aria-hidden="true">↙</span></span
+            >
+          </div>
+          <div class="project-grid">
+            <a
+              class="project-card sudoku-card"
+              href="/sudokuPad/"
+              aria-labelledby="sudoku-title"
+              aria-describedby="sudoku-description"
+            >
+              <div class="project-art sudoku-art" aria-hidden="true">
+                <span class="art-label">A LITTLE DAILY CHALLENGE</span>
+                <div class="sudoku-board">
+                  <span>5</span><span></span><span>3</span><span></span
+                  ><span>1</span><span></span> <span></span><span>1</span
+                  ><span></span><span>5</span><span></span><span>4</span>
+                  <span>2</span><span></span><span>1</span><span></span
+                  ><span>4</span><span></span> <span></span><span>4</span
+                  ><span></span><span>2</span><span></span><span>1</span>
+                  <span>1</span><span></span><span>4</span><span></span
+                  ><span>2</span><span></span> <span></span><span>2</span
+                  ><span></span><span>1</span><span></span
+                  ><span class="selected-cell">5</span>
+                </div>
+                <span class="pencil-stroke"></span
+                ><span class="puzzle-annotation"
+                  >your next “aha!” <span>↖</span></span
+                >
+              </div>
+              <div class="project-body">
+                <div class="project-meta">
+                  <span>PUZZLES & TOOLS</span
+                  ><span class="live-badge"
+                    ><span class="status-dot"></span> Live</span
+                  >
+                </div>
+                <h3 id="sudoku-title">SudokuPad link generator</h3>
+                <p id="sudoku-description">
+                  Pick a date and difficulty, then open the New York Times
+                  sudoku in Sven’s SudokuPad.
+                </p>
+                <div class="project-action">
+                  Find your next puzzle
+                  <span class="circle-arrow" aria-hidden="true">↗</span>
+                </div>
+              </div>
+            </a>
+
+            <a
+              class="project-card savings-card"
+              href="/saving/"
+              aria-labelledby="savings-title"
+              aria-describedby="savings-description"
+            >
+              <div class="project-art savings-art" aria-hidden="true">
+                <span class="art-label">ONE STEP CLOSER</span>
+                <div class="savings-chart">
+                  <span></span><span></span><span></span><span></span
+                  ><span></span>
+                </div>
+                <span class="goal-spark">✳</span
+                ><span class="savings-annotation">little by little ↗</span>
+              </div>
+              <div class="project-body">
+                <div class="project-meta">
+                  <span>EVERYDAY TOOLS</span
+                  ><span class="live-badge"
+                    ><span class="status-dot"></span> Live</span
+                  >
+                </div>
+                <h3 id="savings-title">Savings goal tracker</h3>
+                <p id="savings-description">
+                  Keep an eye on your savings goals and see your progress, one
+                  step at a time.
+                </p>
+                <div class="project-action">
+                  Open the tracker
+                  <span class="circle-arrow" aria-hidden="true">↗</span>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="future-note">
+            <span class="future-spark" aria-hidden="true">✳</span>
+            <p>
+              <strong>A little room for what’s next.</strong> More apps and
+              experiments will find a home here.
+            </p>
+            <a href="https://github.com/ionabio"
+              >Follow along on GitHub <span aria-hidden="true">↗</span></a
+            >
+          </div>
+        </section>
+
+        <section class="about-section" id="about" aria-labelledby="about-title">
+          <div>
+            <p class="eyebrow">BEHIND THE WORKBENCH</p>
+            <h2 id="about-title">
+              An idea. A little tinkering.<br />Something worth sharing.
+            </h2>
+          </div>
+          <div class="about-copy">
+            <p>
+              This is my small corner of the internet: a home for things I
+              build, problems I get curious about, and experiments that turn
+              into useful tools.
+            </p>
+            <p>
+              Some projects solve a small everyday problem. Others are just for
+              the joy of figuring something out. This space will grow along with
+              them.
+            </p>
+            <a class="text-link" href="https://github.com/ionabio"
+              >See what I’m building <span aria-hidden="true">↗</span></a
+            >
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <a class="wordmark footer-wordmark" href="/" aria-label="nabi.be home"
+          >nabi<span class="wordmark-dot">.</span
+          ><span class="wordmark-domain">be</span></a
+        >
+        <p>A small corner of the internet. Always room to grow.</p>
+        <a href="#main">Back to top <span aria-hidden="true">↑</span></a>
+      </footer>
     </div>
-</body>
+  </body>
 </html>
