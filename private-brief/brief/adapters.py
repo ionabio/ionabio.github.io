@@ -47,7 +47,7 @@ def article(item):
     scope = item.get('contentScope','headline')
     if scope not in ('headline','teaser','full_authorized'):
         raise ValueError('Invalid scope')
-    if scope == 'full_authorized' and not item.get('accessVerified'):
+    if scope == 'full_authorized' and item.get('accessVerified') is not True:
         raise ValueError('Full text requires verified access')
     headline = str(item['headline'])[:300]
     url = canonical_url(item.get('canonicalUrl'),publisher)

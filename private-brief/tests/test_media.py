@@ -8,6 +8,10 @@ class MediaTests(unittest.TestCase):
   self.assertEqual(media_record({'kind':'illustration','theme':'health'})['theme'],'health')
   self.assertEqual(media_record({'kind':'illustration','theme':'invalid'})['theme'],'news')
   with self.assertRaises(ValueError):media_record({'kind':'photo','credit':'Unknown'})
+ def test_truthy_rights_flags_rejected(self):
+  for value in ('false','true',1,False,None):
+   with self.assertRaises(ValueError):media_record({'kind':'photo','rightsVerified':value,'credit':'synthetic','license':'synthetic','imageId':'a'*64,'extension':'png'})
+  self.assertEqual(media_record({'kind':'photo','rightsVerified':True,'credit':'synthetic','license':'synthetic','imageId':'a'*64,'extension':'png'})['kind'],'photo')
  def test_private_image_boundary(self):
   with tempfile.TemporaryDirectory() as directory:
    config={'TESTING':True,'SECRET_KEY':'synthetic','PASSWORD_HASH':generate_password_hash('synthetic'),'DATABASE':str(Path(directory)/'db.sqlite'),'PUBLIC_ORIGIN':'https://brief.test','MEDIA_DIR':directory}

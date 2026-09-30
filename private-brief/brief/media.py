@@ -22,7 +22,7 @@ def media_record(raw):
     if raw.get('kind')=='illustration':
         theme=raw.get('theme','news')
         return {'kind':'illustration','theme':theme if theme in ('news','health','science') else 'news'}
-    if raw.get('kind')!='photo' or not raw.get('rightsVerified') or not raw.get('credit') or not raw.get('license'):
+    if raw.get('kind')!='photo' or raw.get('rightsVerified') is not True or not raw.get('credit') or not raw.get('license'):
         raise ValueError('Photo requires verified rights and credit')
     if not re.fullmatch('[a-f0-9]{64}',raw.get('imageId','')) or raw.get('extension') not in ('png','jpg','webp'):
         raise ValueError('Invalid private image identifier')
