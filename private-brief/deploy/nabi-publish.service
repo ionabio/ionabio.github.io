@@ -1,0 +1,15 @@
+[Unit]
+Description=Publish approved Nabi morning draft and send generic ready notification
+[Service]
+Type=oneshot
+User=nabi-brief
+Group=nabi-brief
+WorkingDirectory=/opt/nabi-brief
+EnvironmentFile=/etc/nabi-brief/environment
+ExecStart=/opt/nabi-brief/.venv/bin/python -m brief publish --notify
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nabi-brief
+UMask=0077

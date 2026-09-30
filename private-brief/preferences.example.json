@@ -1,0 +1,14 @@
+{
+  "level":"B2",
+  "locale":"nl-BE",
+  "maxArticles":3,
+  "maxVocabularyPerArticle":6,
+  "maxQuestionsPerArticle":3,
+  "preferredTopics":["België","gezondheid","wetenschap","dagelijks leven"],
+  "excludeTopics":[],
+  "weekdayStyle":"kort en praktisch",
+  "weekendStyle":"meer ruimte om te lezen",
+  "retailers":["AH Belgium","Delhaize Belgium"],
+  "notificationPreview":"generic",
+  "ai":{"maxCallsPerRun":2,"maxInputCharactersPerCall":6000,"provider":"none","maxCostEuroPerDay":0}
+}

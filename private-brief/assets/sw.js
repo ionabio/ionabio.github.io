@@ -1,0 +1,3 @@
+// Deliberately no fetch handler and no Cache API: private pages/data are never cached.
+self.addEventListener('push',event=>{let date='';try{date=event.data?.json()?.date||''}catch{}if(!/^\d{4}-\d{2}-\d{2}$/.test(date))date='';event.waitUntil(self.registration.showNotification('Je ochtendbrief is klaar',{body:'Open je privépagina om te lezen.',tag:'morning-brief',renotify:false,data:{url:date?'/?date='+date:'/'}}))});
+self.addEventListener('notificationclick',event=>{event.notification.close();const path=event.notification.data?.url||'/';const url=new URL(path,self.location.origin);if(url.origin!==self.location.origin)return;event.waitUntil(clients.openWindow(url.href))});
