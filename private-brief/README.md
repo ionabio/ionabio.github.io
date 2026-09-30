@@ -56,3 +56,5 @@ Scheduler targets 08:00 Brussels using systemd timezone-aware calendar, no fixed
 - [Nieuwsblad RSS terms](https://www.nieuwsblad.be/nieuws/rss-feeds-en-nieuwstickers/54272636.html)
 
 Authoring QA: 18 synthetic tests passed; Chrome headless verified mobile (390×844) and desktop (1280×900), no horizontal overflow, login/logout, expandable answer, disabled unconfigured push and no JavaScript errors. Actual Pi/Linux service/TLS/network/OAuth and phone delivery remain untested.
+
+Dedicated private deals page: /deals, sharing the authenticated archive and validated data. A mocked Chrome denied-permission test also passed: controls disabled and no implicit permission prompt. Actual phone delivery remains untested.

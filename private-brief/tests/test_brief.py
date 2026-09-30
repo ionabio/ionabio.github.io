@@ -47,7 +47,7 @@ class Tests(unittest.TestCase):
   return c.post('/login',data={'password':'synthetic','csrf':token},headers={'Origin':'https://brief.test'})
  def test_auth_boundary(self):
   c=self.app().test_client()
-  for path in ['/','/assets/app.js','/sw.js','/api/briefs','/api/briefs/2026-09-30','/api/push/config']:
+  for path in ['/','/deals','/assets/app.js','/sw.js','/api/briefs','/api/briefs/2026-09-30','/api/push/config']:
    r=c.get(path);self.assertIn(r.status_code,(302,401));self.assertIn('no-store',r.headers['Cache-Control'])
  def test_cookie_csrf_logout(self):
   c=self.app().test_client();r=self.login(c);self.assertEqual(r.status_code,302)

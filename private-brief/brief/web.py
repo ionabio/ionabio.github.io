@@ -83,6 +83,8 @@ def create_app(config=None):
         return redirect('/login')
     @app.get('/')
     def home(): return render_template('dashboard.html')
+    @app.get('/deals')
+    def deals_page(): return render_template('dashboard.html',deals_view=True)
     @app.get('/api/briefs')
     def archives():
         with store.connect() as db:
