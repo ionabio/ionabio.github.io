@@ -5,11 +5,23 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from .adapters import article, deal, digest
 from .ingest import normalize_tasks, normalize_calendar
+from .editorial import reviewed_language
 ZONE = ZoneInfo('Europe/Brussels')
 def clock(now=None):
     return (now or datetime.now(timezone.utc)).astimezone(ZONE)
 def due(now=None):
     return clock(now).hour >= 8
+
+def limits(preferences):
+    result = {}
+    for name, default, ceiling in (('maxArticles',3,10),('maxVocabularyPerArticle',6,12),('maxQuestionsPerArticle',3,5)):
+        value = preferences.get(name)
+        if value is None or value == '':
+            value = default
+        if type(value) is not int or not 0 <= value <= ceiling:
+            raise ValueError(f'{name} must be an integer from 0 to {ceiling}')
+        result[name] = value
+    return result
 
 def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=6000):
     local = clock(now)
@@ -26,6 +38,7 @@ def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=60
             stamp = datetime.fromisoformat(source['checkedAt'].replace('Z','+00:00'))
             if not 0 <= (local-stamp).total_seconds() <= 86400:
                 raise ValueError('Source verification expired')
+    effective = limits(bundle.get('preferences') or {})
     content_hash = digest(json.dumps(bundle,sort_keys=True,ensure_ascii=False))
     # Hold an SQLite transaction for the entire run. One writer, no overlapping runs.
     # Language adapters must have bounded timeouts; a crashed process releases the lock.
@@ -36,22 +49,27 @@ def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=60
             return {'status':'unchanged','date':date}
         articles, seen, calls = [], set(), 0
         for raw in bundle['news'].get('items',[]) if bundle['news']['status']=='verified' else []:
-            if raw.get('include', True) is False or len(articles) >= min(int(bundle.get('preferences',{}).get('maxArticles',3)),10):
+            if raw.get('include', True) is False or len(articles) >= effective['maxArticles']:
                 continue
             item = article(raw)
             if item['key'] in seen:
                 continue
             seen.add(item['key'])
-            language_key = digest(json.dumps([item['key'],item['text'],item['contentScope'],bundle.get('learning',{}),item.get('reviewedLanguage'),'v1']))
+            language_key = digest(json.dumps([item['key'],item['text'],item['contentScope'],bundle.get('learning',{}),item.get('reviewedLanguage'),effective,'v2']))
             cached = db.execute('SELECT payload FROM cache WHERE key=?',(language_key,)).fetchone()
             if cached:
                 language = json.loads(cached[0])
-            elif generator and calls < max_calls and item['text']:
-                calls += 1
+            elif item.get('reviewedLanguage') or (generator and calls < max_calls and item['text']):
                 try:
-                    language = generator({**item,'text':item['text'][:max_input_chars]},bundle.get('learning',{}))
-                    if set(language) != {'summaryNl','vocabulary','puzzle'} or len(language['summaryNl'])>700 or len(language['vocabulary'])>6 or len(language['puzzle'])>3:
+                    if item.get('reviewedLanguage'):
+                        # Local hash/evidence validation uses the complete retained source.
+                        language = reviewed_language(item, {**bundle.get('learning',{}), **effective})
+                    else:
+                        calls += 1
+                        language = generator({**item,'text':item['text'][:max_input_chars]}, {**bundle.get('learning',{}), **effective})
+                    if set(language) != {'summaryNl','vocabulary','puzzle'} or len(language['summaryNl'])>700 or len(language['vocabulary'])>12 or len(language['puzzle'])>5:
                         raise ValueError('Language output exceeds budget')
+                    language = {**language, 'vocabulary':language['vocabulary'][:effective['maxVocabularyPerArticle']], 'puzzle':language['puzzle'][:effective['maxQuestionsPerArticle']]}
                     db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)',(language_key,json.dumps(language,ensure_ascii=False)))
                 except Exception:
                     language = {'summaryNl':'Taaloefening tijdelijk niet beschikbaar.','vocabulary':[],'puzzle':[]}

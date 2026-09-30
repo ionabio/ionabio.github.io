@@ -106,3 +106,25 @@ class FailureTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class LanguageLimitsTests(unittest.TestCase):
+ setUp=Tests.setUp
+ tearDown=Tests.tearDown
+ def test_long_source_configured_counts(self):
+  raw=self.bundle['news']['items'][0];raw['authorizedText']='x'*7000+' bewijs achteraan'
+  raw['reviewedLanguage']={'sourceHash':digest(raw['authorizedText']),'summaryNl':'Origineel.','vocabulary':[{'word':str(i)} for i in range(7)],'puzzle':[{'question':str(i),'answer':'bewijs','explanation':'Bron.','evidence':'bewijs achteraan'} for i in range(4)]}
+  for v,q in ((7,4),(1,2),(0,0)):
+   self.bundle['preferences']={'maxVocabularyPerArticle':v,'maxQuestionsPerArticle':q}
+   result=run(self.store,self.bundle,NOW,generator=lambda *a:self.fail('No provider needed'))
+   with self.store.connect() as db:p=json.loads(db.execute('SELECT payload FROM briefs').fetchone()[0])['news'][0]
+   self.assertEqual(len(p['vocabulary']),v);self.assertEqual(len(p['puzzle']),q);self.assertEqual(result['languageCalls'],0)
+ def test_empty_invalid_limits_and_provider_bound(self):
+  self.bundle['preferences']={'maxArticles':None,'maxVocabularyPerArticle':'','maxQuestionsPerArticle':None}
+  self.bundle['news']['items'][0]['authorizedText']='x'*8000
+  seen=[]
+  def provider(item,prefs):
+   seen.append((len(item['text']),prefs['maxQuestionsPerArticle']));return {'summaryNl':'Fictief.','vocabulary':[],'puzzle':[]}
+  run(self.store,self.bundle,NOW,generator=provider);self.assertEqual(seen,[(6000,3)])
+  for value in (-1,True,'3',1.5,100):
+   self.bundle['preferences']={'maxArticles':value}
+   with self.assertRaises(ValueError):run(self.store,self.bundle,NOW)
