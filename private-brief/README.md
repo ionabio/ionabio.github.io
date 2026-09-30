@@ -58,3 +58,9 @@ Scheduler targets 08:00 Brussels using systemd timezone-aware calendar, no fixed
 Authoring QA: 18 synthetic tests passed; Chrome headless verified mobile (390×844) and desktop (1280×900), no horizontal overflow, login/logout, expandable answer, disabled unconfigured push and no JavaScript errors. Actual Pi/Linux service/TLS/network/OAuth and phone delivery remain untested.
 
 Dedicated private deals page: /deals, sharing the authenticated archive and validated data. A mocked Chrome denied-permission test also passed: controls disabled and no implicit permission prompt. Actual phone delivery remains untested.
+
+## Multimedia
+
+News cards now have original local topic illustrations (reading, health, science), labelled “Illustratie · geen nieuwsfoto”. Set article `media={kind:"illustration",theme:"news"|"health"|"science"}`. No remote requests, image generation spend, or subscriber photos are involved. Set `BRIEF_MEDIA_DIR` to a private directory outside the checkout for optional photos. `brief.media.import_image` imports PNG/JPEG/WebP files using a content hash; SVG uploads are refused. Article photo metadata requires `kind:"photo", imageId, extension, rightsVerified:true, credit, license, alt`. Photos are served only after server authentication, with no-store responses, and credits shown on the card. Verify permissions yourself/through the approved source workflow; metadata is an assertion, not an automated copyright determination. Never download/reuse publisher photography merely because it is visible in an email or on an article page. No image URLs are hotlinked and browser requests reveal no interests to external image hosts.
+
+User explicitly authorized merging the initial skeleton; PR2 was merged on 2026-09-30. Pi deployment remains pending secure SSH/connectivity/TLS/source setup.

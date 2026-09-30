@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import secrets
 import time
@@ -13,7 +14,7 @@ from .store import Store
 def create_app(config=None):
     root=Path(__file__).resolve().parent.parent
     app=Flask(__name__,template_folder=str(root/'templates'),static_folder=None)
-    app.config.update(SECRET_KEY=os.environ.get('BRIEF_SESSION_SECRET'),PASSWORD_HASH=os.environ.get('BRIEF_PASSWORD_HASH'),DATABASE=os.environ.get('BRIEF_DATABASE'),PUBLIC_ORIGIN=os.environ.get('BRIEF_PUBLIC_ORIGIN'),VAPID_PUBLIC_KEY=os.environ.get('BRIEF_VAPID_PUBLIC_KEY',''),SESSION_COOKIE_SECURE=True,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Strict',PERMANENT_SESSION_LIFETIME=timedelta(hours=12),MAX_CONTENT_LENGTH=32768)
+    app.config.update(SECRET_KEY=os.environ.get('BRIEF_SESSION_SECRET'),PASSWORD_HASH=os.environ.get('BRIEF_PASSWORD_HASH'),DATABASE=os.environ.get('BRIEF_DATABASE'),PUBLIC_ORIGIN=os.environ.get('BRIEF_PUBLIC_ORIGIN'),MEDIA_DIR=os.environ.get('BRIEF_MEDIA_DIR'),VAPID_PUBLIC_KEY=os.environ.get('BRIEF_VAPID_PUBLIC_KEY',''),SESSION_COOKIE_SECURE=True,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Strict',PERMANENT_SESSION_LIFETIME=timedelta(hours=12),MAX_CONTENT_LENGTH=32768)
     if config: app.config.update(config)
     if not all(app.config.get(k) for k in ('SECRET_KEY','PASSWORD_HASH','DATABASE','PUBLIC_ORIGIN')):
         raise RuntimeError('Required private deployment settings missing')
@@ -113,8 +114,14 @@ def create_app(config=None):
         return jsonify(status='unsubscribed')
     @app.get('/assets/<name>')
     def assets(name):
-        if name not in ('app.js','app.css','manifest.webmanifest','icon.svg'): abort(404)
+        if name not in ('app.js','app.css','manifest.webmanifest','icon.svg','news-illustration.svg','health-illustration.svg','science-illustration.svg'): abort(404)
         return send_from_directory(root/'assets',name)
+    @app.get('/media/<name>')
+    def private_media(name):
+        if not re.fullmatch(r'[a-f0-9]{64}\.(png|jpg|webp)',name) or not app.config.get('MEDIA_DIR'): abort(404)
+        directory=Path(app.config['MEDIA_DIR']).resolve()
+        if root.parent.resolve() in directory.parents or directory==root.parent.resolve(): abort(404)
+        return send_from_directory(directory,name)
     @app.get('/sw.js')
     def worker(): return send_from_directory(root/'assets','sw.js')
     return app

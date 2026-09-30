@@ -40,6 +40,7 @@ def newsletter_text(sender, html):
     parser.feed(html)
     return ' '.join(x for x in parser.parts if x)
 def article(item):
+    from .media import media_record
     publisher = item['publisher']
     if publisher not in PUBLISHERS:
         raise ValueError('Unsupported publisher')
@@ -50,7 +51,7 @@ def article(item):
         raise ValueError('Full text requires verified access')
     headline = str(item['headline'])[:300]
     url = canonical_url(item.get('canonicalUrl'),publisher)
-    return dict(publisher=publisher,newsletterName=item.get('newsletterName'),receivedAt=item.get('receivedAt'),publishedAt=item.get('publishedAt'),headline=headline,canonicalUrl=url,contentScope=scope,sourceStatus='available' if url else 'canonical_unresolved',text=str(item.get('authorizedText',''))[:12000],reviewedLanguage=item.get('reviewedLanguage'),key=digest(url or publisher+':'+ ' '.join(headline.lower().split())))
+    return dict(media=media_record(item.get('media')),publisher=publisher,newsletterName=item.get('newsletterName'),receivedAt=item.get('receivedAt'),publishedAt=item.get('publishedAt'),headline=headline,canonicalUrl=url,contentScope=scope,sourceStatus='available' if url else 'canonical_unresolved',text=str(item.get('authorizedText',''))[:12000],reviewedLanguage=item.get('reviewedLanguage'),key=digest(url or publisher+':'+ ' '.join(headline.lower().split())))
 def deal(item, date):
     required = ('retailer','product','price','quantity','unit','validFrom','validTo','sourceUrl','checkedAt','availability')
     if any(k not in item for k in required):
