@@ -56,7 +56,7 @@ def create_app(config=None):
                 abort(403)
         if request.path not in ('/login','/health') and not authenticated():
             if request.path.startswith('/api/'): abort(401)
-            return redirect('/login')
+            return redirect('/login?next=/connect' if request.path=='/connect' else '/login')
     @app.after_request
     def headers(response):
         response.headers.update({'Cache-Control':'no-store, private','Pragma':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",'Permissions-Policy':'camera=(), microphone=(), geolocation=()'})
@@ -85,7 +85,7 @@ def create_app(config=None):
             db.execute('DELETE FROM sessions WHERE expires<?',(now,))
             db.execute('INSERT INTO sessions VALUES (?,?,?)',(digest(sid),session['csrf'],now+43200))
             db.execute('DELETE FROM attempts WHERE ip=?',(ip,))
-        return redirect('/')
+        return redirect('/connect' if request.args.get('next')=='/connect' else '/')
     @app.post('/logout')
     def logout():
         with store.connect() as db:

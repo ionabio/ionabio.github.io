@@ -107,4 +107,12 @@ class EnrollmentTests(unittest.TestCase):
   first=self.enroll();child=self.refresh(first['refresh_token']).json
   with self.store.connect() as db:db.execute('UPDATE publisher_refreshes SET expires=? WHERE token_hash=?',(time.time()-1,digest(first['refresh_token'])))
   self.assertEqual(self.refresh(first['refresh_token']).status_code,400);self.assertEqual(self.status(child['access_token']),401)
+ def test_phone_login_returns_only_to_fixed_consent_page(self):
+  client=self.app.test_client();r=client.get('/connect',base_url='https://brief.test')
+  self.assertEqual(r.location,'/login?next=/connect')
+  for target,expected in (('/connect','/connect'),('https://evil.invalid','/')):
+   client=self.app.test_client();client.get('/login',base_url='https://brief.test')
+   with client.session_transaction(base_url='https://brief.test') as s:csrf=s['csrf']
+   r=client.post('/login?next='+target,base_url='https://brief.test',data={'password':self.password,'csrf':csrf},headers={'Origin':'https://brief.test'})
+   self.assertEqual(r.status_code,302);self.assertEqual(r.location,expected)
 if __name__=='__main__':unittest.main()
