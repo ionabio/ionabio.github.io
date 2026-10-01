@@ -23,7 +23,7 @@ class DeploymentTests(unittest.TestCase):
     def test_archive_traversal_and_symlinks_denied(self):
         with tempfile.TemporaryDirectory() as tmp:
             archive=Path(tmp)/'bad.tar.gz'
-            for name,kind in [('../private.sqlite3',tarfile.REGTYPE),('/etc/password',tarfile.REGTYPE),('brief/link',tarfile.SYMTYPE),('secrets/token',tarfile.REGTYPE)]:
+            for name,kind in [('../private.sqlite3',tarfile.REGTYPE),('/etc/forbidden',tarfile.REGTYPE),('brief/link',tarfile.SYMTYPE),('secrets/token',tarfile.REGTYPE)]:
                 with tarfile.open(archive,'w:gz') as tar:
                     item=tarfile.TarInfo(name);item.type=kind;item.linkname='/etc';tar.addfile(item)
                 with self.assertRaises(ValueError): updater.extract(archive,Path(tmp)/'out')
