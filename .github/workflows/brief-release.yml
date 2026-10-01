@@ -1,0 +1,109 @@
+name: Approved private brief ARM64 release
+on:
+  push:
+    branches: [main]
+    paths: ['private-brief/deploy/production.json']
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Exact reviewed 40-character commit on main (code only)'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: brief-production-release
+  cancel-in-progress: false
+jobs:
+  select:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      commit: ${{ steps.select.outputs.commit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - id: select
+        env:
+          REQUESTED_COMMIT: ${{ inputs.commit }}
+        run: |
+          python - <<'PY'
+          import json,os,re,subprocess
+          sha=os.environ['REQUESTED_COMMIT'] or json.load(open('private-brief/deploy/production.json'))['commit']
+          if sha is None: raise SystemExit(0)
+          assert re.fullmatch('[a-f0-9]{40}',sha)
+          subprocess.run(['git','merge-base','--is-ancestor',sha,'origin/main'],check=True)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('commit='+sha+'\n')
+          PY
+  build:
+    needs: select
+    if: needs.select.outputs.commit != ''
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ needs.select.outputs.commit }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - run: |
+          python -m pip install -r requirements-release.txt
+          python -m unittest discover -s tests -v
+          python deploy/build_release.py --commit "$RELEASE_COMMIT" --output "$RUNNER_TEMP/release"
+          python deploy/check_release.py --archive "$RUNNER_TEMP/release/brief-arm64.tar.gz"
+        working-directory: private-brief
+        env:
+          RELEASE_COMMIT: ${{ needs.select.outputs.commit }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brief-arm64-code
+          path: ${{ runner.temp }}/release/brief-arm64.tar.gz
+          retention-days: 7
+  approve:
+    needs: [select, build]
+    runs-on: ubuntu-latest
+    environment: brief-production
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Require configured production reviewer gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GATE_ENABLED: ${{ vars.BRIEF_RELEASE_APPROVAL_ENABLED }}
+        run: |
+          test "$GATE_ENABLED" = true
+          gh api "repos/$GITHUB_REPOSITORY/environments/brief-production" > "$RUNNER_TEMP/gate.json"
+          python - <<'PY'
+          import json,os
+          rules=json.load(open(os.environ['RUNNER_TEMP']+'/gate.json'))['protection_rules']
+          assert any(r['type']=='required_reviewers' and r.get('reviewers') for r in rules), 'Production reviewer gate is not configured'
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: brief-arm64-code
+          path: release
+      - name: Bind approval to exact code archive
+        env:
+          RELEASE_COMMIT: ${{ needs.select.outputs.commit }}
+        run: |
+          python - <<'PY'
+          import datetime,hashlib,json,os,pathlib
+          now=datetime.datetime.now(datetime.timezone.utc)
+          p=pathlib.Path('release/brief-arm64.tar.gz')
+          manifest=dict(schema=1,repository=os.environ['GITHUB_REPOSITORY'],commit=os.environ['RELEASE_COMMIT'],workflowCommit=os.environ['GITHUB_SHA'],runId=int(os.environ['GITHUB_RUN_ID']),artifact='brief-arm64.tar.gz',sha256=hashlib.sha256(p.read_bytes()).hexdigest(),issuedAt=now.isoformat(),expiresAt=(now+datetime.timedelta(hours=24)).isoformat())
+          pathlib.Path('release/approval.json').write_text(json.dumps(manifest,sort_keys=True))
+          PY
+      - uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661
+        id: attest
+        with:
+          subject-path: release/approval.json
+      - name: Publish approved public code only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE_PATH" release/approval.sigstore.jsonl
+          gh release create "brief-production-$GITHUB_RUN_ID" release/brief-arm64.tar.gz release/approval.json release/approval.sigstore.jsonl --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Approved private brief ARM64 $GITHUB_RUN_ID" --notes "Code-only release. Exact code commit and digest are in the signed approval manifest. No private content or credentials."

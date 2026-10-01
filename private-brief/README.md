@@ -67,3 +67,6 @@ User explicitly authorized merging the initial skeleton; PR2 was merged on 2026-
 
 Language limits: missing, null or empty values use defaults (3 articles, 6 vocabulary items, 3 questions). Integer zero disables that section. Maximums are 10 articles, 12 vocabulary items and 5 questions; invalid values reject publication. Reviewed exercises validate hashes and evidence against the complete retained source (up to 12,000 characters); only optional provider input is shortened to 6,000 characters. Lower counts trim reviewed outputs and preference changes invalidate the language cache.
 
+## Cloud publishing and approved releases
+
+See [OPERATIONS.md](OPERATIONS.md) for the new scoped HTTPS contract, protected Codex Cloud network-secret setup, exact-hash approval/publication, at-most-once notification requests, reviewer-gated ARM64 releases and outbound Pi updater. Installation and credential approvals remain explicit. The daily publication timer remains disabled until live operation is verified.

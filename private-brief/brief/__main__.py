@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 from .pipeline import run, clock
-from .editorial import prepare, approve, approved, reviewed_language
+from .editorial import prepare, approve, approved, reviewed_language, publish_approved
 from .push import notify
 from .store import Store
 
@@ -54,7 +54,10 @@ def main():
             private_path(args.output).write_text(row[0],encoding='utf-8')
             result={'status':'exported','date':args.date}
         else:
-            result=run(store,approved(store,args.date),generator=reviewed_language,max_calls=10)
+            with store.connect() as db:
+                draft=db.execute('SELECT approved_hash FROM drafts WHERE date=?',(args.date,)).fetchone()
+            if not draft: raise ValueError('No draft')
+            result=publish_approved(store,args.date,draft[0])
             if args.notify and result['status'] in ('published','unchanged'):
                 result['notification']=notify(store,{'VAPID_PRIVATE_KEY':os.environ.get('BRIEF_VAPID_PRIVATE_KEY'),'VAPID_SUBJECT':os.environ.get('BRIEF_VAPID_SUBJECT')})
         print(json.dumps(result))

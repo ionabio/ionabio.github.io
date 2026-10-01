@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS deliveries(date TEXT, subscription TEXT, status TEXT,
 CREATE TABLE IF NOT EXISTS attempts(ip TEXT PRIMARY KEY, count INTEGER, until REAL);
 CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, csrf TEXT, expires REAL);
 CREATE TABLE IF NOT EXISTS locks(name TEXT PRIMARY KEY, expires REAL);
+CREATE TABLE IF NOT EXISTS drafts(date TEXT PRIMARY KEY,payload TEXT,hash TEXT,approved_hash TEXT);
+CREATE TABLE IF NOT EXISTS publishers(id TEXT PRIMARY KEY,token_hash TEXT UNIQUE,expires REAL,revoked INTEGER NOT NULL DEFAULT 0,scopes TEXT);
+CREATE TABLE IF NOT EXISTS publisher_rates(id TEXT PRIMARY KEY,count INTEGER,until REAL);
 '''
 class Store:
     def __init__(self, path):

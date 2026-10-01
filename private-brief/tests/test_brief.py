@@ -36,7 +36,7 @@ class Tests(unittest.TestCase):
   self.assertEqual(run(self.store,self.bundle,NOW,generator=lambda *a:self.fail('Should use cache'))['languageCalls'],0);self.bundle['news']['items'][0]['include']=False;run(self.store,self.bundle,NOW)
   with self.store.connect() as db:self.assertEqual(json.loads(db.execute('SELECT payload FROM briefs').fetchone()[0])['news'],[])
  def test_approval_invalidated(self):
-  p=prepare(self.store,self.bundle);approve(self.store,self.bundle['date'],p['hash']);self.assertEqual(approved(self.store,self.bundle['date']),self.bundle);self.bundle['learning']['level']='B2+';prepare(self.store,self.bundle)
+  p=prepare(self.store,self.bundle,NOW);approve(self.store,self.bundle['date'],p['hash']);self.assertEqual(approved(self.store,self.bundle['date']),self.bundle);self.bundle['learning']['level']='B2+';prepare(self.store,self.bundle,NOW)
   with self.assertRaises(ValueError):approved(self.store,self.bundle['date'])
  def test_deals(self):
   offer={'retailer':'AH Belgium','product':'Fictief','price':2,'quantity':.5,'unit':'kg','validFrom':'2026-09-29','validTo':'2026-10-01','sourceUrl':'https://www.ah.be/bonus','checkedAt':NOW.isoformat(),'availability':'fictief'};result=deal(offer,'2026-09-30');self.assertEqual(result['unitPrice'],4);self.assertNotIn('discountPercent',result);self.assertIsNone(deal(offer,'2026-10-02'))
@@ -112,7 +112,7 @@ class LanguageLimitsTests(unittest.TestCase):
  tearDown=Tests.tearDown
  def test_long_source_configured_counts(self):
   raw=self.bundle['news']['items'][0];raw['authorizedText']='x'*7000+' bewijs achteraan'
-  raw['reviewedLanguage']={'sourceHash':digest(raw['authorizedText']),'summaryNl':'Origineel.','vocabulary':[{'word':str(i)} for i in range(7)],'puzzle':[{'question':str(i),'answer':'bewijs','explanation':'Bron.','evidence':'bewijs achteraan'} for i in range(4)]}
+  raw['reviewedLanguage']={'sourceHash':digest(raw['authorizedText']),'summaryNl':'Origineel.','vocabulary':[{'word':str(i),'meaning':'Fictieve betekenis'} for i in range(7)],'puzzle':[{'question':str(i),'answer':'bewijs','explanation':'Bron.','evidence':'bewijs achteraan'} for i in range(4)]}
   for v,q in ((7,4),(1,2),(0,0)):
    self.bundle['preferences']={'maxVocabularyPerArticle':v,'maxQuestionsPerArticle':q}
    result=run(self.store,self.bundle,NOW,generator=lambda *a:self.fail('No provider needed'))

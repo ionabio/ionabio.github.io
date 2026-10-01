@@ -15,6 +15,7 @@ def create_app(config=None):
     root=Path(__file__).resolve().parent.parent
     app=Flask(__name__,template_folder=str(root/'templates'),static_folder=None)
     app.config.update(SECRET_KEY=os.environ.get('BRIEF_SESSION_SECRET'),PASSWORD_HASH=os.environ.get('BRIEF_PASSWORD_HASH'),DATABASE=os.environ.get('BRIEF_DATABASE'),PUBLIC_ORIGIN=os.environ.get('BRIEF_PUBLIC_ORIGIN'),MEDIA_DIR=os.environ.get('BRIEF_MEDIA_DIR'),VAPID_PUBLIC_KEY=os.environ.get('BRIEF_VAPID_PUBLIC_KEY',''),SESSION_COOKIE_SECURE=True,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Strict',PERMANENT_SESSION_LIFETIME=timedelta(hours=12),MAX_CONTENT_LENGTH=32768)
+    app.config.update(VAPID_PRIVATE_KEY=os.environ.get('BRIEF_VAPID_PRIVATE_KEY'),VAPID_SUBJECT=os.environ.get('BRIEF_VAPID_SUBJECT'))
     if config: app.config.update(config)
     if not all(app.config.get(k) for k in ('SECRET_KEY','PASSWORD_HASH','DATABASE','PUBLIC_ORIGIN')):
         raise RuntimeError('Required private deployment settings missing')
@@ -41,6 +42,11 @@ def create_app(config=None):
         return bool(row and row[0]>time.time())
     @app.before_request
     def boundary():
+        from .publishing import PREFIX
+        if request.path.startswith(PREFIX+'/'):
+            # A separate bearer boundary; no browser-session or CSRF exemption elsewhere.
+            request.max_content_length=1000000
+            return None
         if request.method not in ('GET','HEAD','OPTIONS'):
             if request.headers.get('Origin') != app.config['PUBLIC_ORIGIN']:
                 abort(403)
@@ -56,7 +62,10 @@ def create_app(config=None):
         if app.config['SESSION_COOKIE_SECURE']: response.headers['Strict-Transport-Security']='max-age=31536000'
         return response
     @app.get('/health')
-    def health(): return jsonify(status='ok')
+    def health():
+        with store.connect() as db: db.execute('SELECT 1').fetchone()
+        build=root/'BUILD.json'
+        return jsonify(status='ok',commit=json.loads(build.read_text())['commit'] if build.exists() else None)
     @app.route('/login',methods=['GET','POST'])
     def login():
         if request.method=='GET': return render_template('login.html')
@@ -124,4 +133,6 @@ def create_app(config=None):
         return send_from_directory(directory,name)
     @app.get('/sw.js')
     def worker(): return send_from_directory(root/'assets','sw.js')
+    from .publishing import register
+    register(app,store)
     return app

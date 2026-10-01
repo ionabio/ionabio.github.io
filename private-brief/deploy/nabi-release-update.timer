@@ -1,0 +1,9 @@
+[Unit]
+Description=Poll outbound for approved code releases (does not publish content)
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+RandomizedDelaySec=30s
+Unit=nabi-release-update.service
+[Install]
+WantedBy=timers.target

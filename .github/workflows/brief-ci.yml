@@ -1,0 +1,45 @@
+name: Private brief tests
+on:
+  pull_request:
+    paths: ['private-brief/**', '.github/workflows/brief-*.yml']
+  push:
+    branches: [main]
+    paths: ['private-brief/**', '.github/workflows/brief-*.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-release.txt
+        working-directory: private-brief
+      - run: python -m unittest discover -s tests -v
+        working-directory: private-brief
+      - name: Build and validate versioned ARM64 release offline
+        working-directory: private-brief
+        env:
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          python deploy/build_release.py --commit "$RELEASE_COMMIT" --output "$RUNNER_TEMP/release"
+          python deploy/check_release.py --archive "$RUNNER_TEMP/release/brief-arm64.tar.gz"
+      - name: Cloud-to-Pi anonymous boundary probe (no credentials or content)
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen,Request
+          from urllib.error import HTTPError
+          import json
+          probe=lambda path:Request('https://brief.nabi.be'+path,headers={'User-Agent':'NabiBrief-Cloud/1.0'})
+          with urlopen(probe('/health'),timeout=20) as r:
+              assert r.status==200 and json.load(r)['status']=='ok'
+              assert 'no-store' in r.headers.get('Cache-Control','')
+          try:
+              urlopen(probe('/api/briefs'),timeout=20)
+              raise AssertionError('Anonymous brief API unexpectedly served content')
+          except HTTPError as r:
+              assert r.code==401 and 'no-store' in r.headers.get('Cache-Control','')
+          print('External GitHub-hosted cloud reached Pi HTTPS; private API denied anonymous access')
+          PY
