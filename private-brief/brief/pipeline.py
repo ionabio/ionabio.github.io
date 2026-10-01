@@ -1,6 +1,7 @@
 import json
 import copy
 import time
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from .adapters import article, deal, digest
@@ -23,11 +24,13 @@ def limits(preferences):
         result[name] = value
     return result
 
-def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=6000):
+def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=6000, transaction=None):
     local = clock(now)
     date = local.date().isoformat()
     if not due(now):
         return {'status':'not_due','date':date}
+    from .validation import validate_bundle
+    validate_bundle(bundle,now)
     if bundle.get('date') != date:
         raise ValueError('Input date must match current Brussels date')
     for name in ('calendar','todos','news','deals'):
@@ -42,8 +45,8 @@ def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=60
     content_hash = digest(json.dumps(bundle,sort_keys=True,ensure_ascii=False))
     # Hold an SQLite transaction for the entire run. One writer, no overlapping runs.
     # Language adapters must have bounded timeouts; a crashed process releases the lock.
-    with store.connect() as db:
-        db.execute('BEGIN IMMEDIATE')
+    with (nullcontext(transaction) if transaction is not None else store.connect()) as db:
+        if transaction is None: db.execute('BEGIN IMMEDIATE')
         existing = db.execute('SELECT hash FROM briefs WHERE date=?',(date,)).fetchone()
         if existing and existing[0] == content_hash:
             return {'status':'unchanged','date':date}
@@ -72,6 +75,7 @@ def run(store, bundle, now=None, generator=None, max_calls=2, max_input_chars=60
                     language = {**language, 'vocabulary':language['vocabulary'][:effective['maxVocabularyPerArticle']], 'puzzle':language['puzzle'][:effective['maxQuestionsPerArticle']]}
                     db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)',(language_key,json.dumps(language,ensure_ascii=False)))
                 except Exception:
+                    if item.get('reviewedLanguage'): raise
                     language = {'summaryNl':'Taaloefening tijdelijk niet beschikbaar.','vocabulary':[],'puzzle':[]}
             else:
                 language = {'summaryNl':'Geen taaloefening beschikbaar voor deze bron.','vocabulary':[],'puzzle':[]}
