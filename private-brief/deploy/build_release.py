@@ -2,6 +2,7 @@
 import argparse
 import json
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -12,6 +13,8 @@ from pathlib import Path
 def main():
     p=argparse.ArgumentParser();p.add_argument('--commit',required=True);p.add_argument('--output',required=True);a=p.parse_args()
     assert platform.machine() in ('aarch64','arm64')
+    assert sys.version_info[:2]==(3,13)
+    assert re.fullmatch('[a-f0-9]{40}',a.commit)
     root=Path(__file__).resolve().parents[1];out=Path(a.output);out.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         stage=Path(tmp)

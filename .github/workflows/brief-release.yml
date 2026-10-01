@@ -51,6 +51,7 @@ jobs:
           python -m pip install -r requirements-release.txt
           python -m unittest discover -s tests -v
           python deploy/build_release.py --commit "$RELEASE_COMMIT" --output "$RUNNER_TEMP/release"
+          python deploy/check_release.py --archive "$RUNNER_TEMP/release/brief-arm64.tar.gz"
         working-directory: private-brief
         env:
           RELEASE_COMMIT: ${{ needs.select.outputs.commit }}
