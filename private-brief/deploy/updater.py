@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.13
 """Outbound, fixed-repository release updater. No remote commands or credentials."""
 import hashlib
 import json
@@ -21,6 +21,8 @@ STATE=Path('/var/lib/nabi-release')
 RELEASES=Path('/opt/nabi-brief-releases')
 CURRENT=Path('/opt/nabi-brief-releases/current')
 GH='/usr/local/lib/nabi-release/gh'
+PYTHON='/usr/bin/python3.13'
+WORKFLOW_PIN=Path('/usr/local/lib/nabi-release/workflow.sha256')
 MAX_ARCHIVE=256*1024*1024
 
 
@@ -127,37 +129,71 @@ def write_state(value):
     os.replace(temporary,STATE/'state.json')
 
 
+def require_python313():
+    try:
+        subprocess.run([PYTHON,'-c','import sys,venv,ensurepip; sys.exit(0 if sys.version_info[:2] == (3,13) else 1)'],check=True,timeout=10,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    except (OSError,subprocess.SubprocessError) as error:
+        raise RuntimeError('Python 3.13 required at '+PYTHON+'; production unchanged') from error
+
+
+def release_list():
+    # Do not let a page of unapproved tags hide an older approved release.
+    releases=[];page=1
+    while True:
+        batch=download('https://api.github.com/repos/'+REPO+'/releases?per_page=100&page='+str(page),limit=2000000)
+        releases.extend(batch)
+        if len(batch)<100: return releases
+        page+=1
+
+
+def verify_release(release,run_id,work):
+    assets={a['name']:a for a in release['assets']}
+    for name in ('approval.json','approval.sigstore.jsonl'):
+        download(assets[name]['browser_download_url'],work/name)
+    # Verify signed bytes before parsing or trusting any manifest fields.
+    subprocess.run([GH,'attestation','verify',str(work/'approval.json'),'--repo',REPO,'--bundle',str(work/'approval.sigstore.jsonl'),'--cert-identity',IDENTITY,'--deny-self-hosted-runners'],check=True,timeout=90,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    manifest=json.loads((work/'approval.json').read_text());manifest_check(manifest,run_id)
+    # Same-name workflows cannot bypass the locally pinned reviewer gate.
+    subprocess.run([GH,'attestation','verify',str(work/'approval.json'),'--repo',REPO,'--bundle',str(work/'approval.sigstore.jsonl'),'--cert-identity',IDENTITY,'--deny-self-hosted-runners','--source-ref','refs/heads/main','--source-digest',manifest['workflowCommit']],check=True,timeout=90,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    workflow=download('https://raw.githubusercontent.com/'+REPO+'/'+manifest['workflowCommit']+'/.github/workflows/brief-release.yml')
+    if hashlib.sha256(workflow).hexdigest()!=WORKFLOW_PIN.read_text().strip():
+        raise ValueError('Signer workflow policy changed; local administrator review required')
+    archive=work/'brief-arm64.tar.gz'
+    download(assets[archive.name]['browser_download_url'],archive,MAX_ARCHIVE)
+    with archive.open('rb') as source:
+        if hashlib.file_digest(source,'sha256').hexdigest()!=manifest['sha256']: raise ValueError('Archive digest mismatch')
+    return manifest,archive
+
+
+def select_release(releases,highest_run,work):
+    candidates=[r for r in releases if not r['draft'] and not r['prerelease'] and re.fullmatch('brief-production-[0-9]+',r['tag_name']) and int(r['tag_name'].rsplit('-',1)[1])>highest_run]
+    for release in sorted(candidates,key=lambda r:int(r['tag_name'].rsplit('-',1)[1]),reverse=True):
+        run_id=int(release['tag_name'].rsplit('-',1)[1])
+        # Invalid remote metadata must never advance the durable downgrade floor.
+        with tempfile.TemporaryDirectory(prefix='candidate-',dir=work) as tmp:
+            try: manifest,archive=verify_release(release,run_id,Path(tmp))
+            except Exception: continue
+            selected=work/'brief-arm64.tar.gz'
+            os.replace(archive,selected)
+            return manifest,selected
+    return None
+
+
 def update():
     if platform.machine()!='aarch64' or os.geteuid()!=0: raise RuntimeError('Root ARM64 updater required')
+    require_python313()  # Before state writes, staging, backups or service changes.
     STATE.mkdir(mode=0o700,exist_ok=True)
     import fcntl
     with (STATE/'update.lock').open('a') as lock:
         try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         except BlockingIOError: return {'status':'busy'}
         state=json.loads((STATE/'state.json').read_text()) if (STATE/'state.json').exists() else {'highestRun':0}
-        releases=download('https://api.github.com/repos/'+REPO+'/releases?per_page=100',limit=2000000)
-        candidates=[r for r in releases if not r['draft'] and not r['prerelease'] and re.fullmatch('brief-production-[0-9]+',r['tag_name'])]
-        if not candidates: return {'status':'no_approved_release'}
-        release=max(candidates,key=lambda r:int(r['tag_name'].rsplit('-',1)[1]))
-        run_id=int(release['tag_name'].rsplit('-',1)[1])
-        if run_id<=state['highestRun']: return {'status':'unchanged','commit':state.get('commit')}
+        releases=release_list()
         with tempfile.TemporaryDirectory(prefix='download-',dir=STATE) as tmp:
             work=Path(tmp)
-            assets={a['name']:a for a in release['assets']}
-            for name in ('approval.json','approval.sigstore.jsonl'):
-                download(assets[name]['browser_download_url'],work/name)
-            # Verify signed bytes before parsing or trusting any manifest fields.
-            subprocess.run([GH,'attestation','verify',str(work/'approval.json'),'--repo',REPO,'--bundle',str(work/'approval.sigstore.jsonl'),'--cert-identity',IDENTITY,'--deny-self-hosted-runners'],check=True,timeout=90,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-            manifest=json.loads((work/'approval.json').read_text());manifest_check(manifest,run_id)
-            # Bind the actual attested source to a locally pinned reviewer-gated workflow.
-            # A repo writer cannot substitute a same-name workflow with the gate removed.
-            subprocess.run([GH,'attestation','verify',str(work/'approval.json'),'--repo',REPO,'--bundle',str(work/'approval.sigstore.jsonl'),'--cert-identity',IDENTITY,'--deny-self-hosted-runners','--source-ref','refs/heads/main','--source-digest',manifest['workflowCommit']],check=True,timeout=90,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-            workflow=download('https://raw.githubusercontent.com/'+REPO+'/'+manifest['workflowCommit']+'/.github/workflows/brief-release.yml')
-            if hashlib.sha256(workflow).hexdigest()!=Path('/usr/local/lib/nabi-release/workflow.sha256').read_text().strip():
-                raise ValueError('Signer workflow policy changed; local administrator review required')
-            archive=work/'brief-arm64.tar.gz'
-            download(assets[archive.name]['browser_download_url'],archive,MAX_ARCHIVE)
-            if hashlib.file_digest(archive.open('rb'),'sha256').hexdigest()!=manifest['sha256']: raise ValueError('Archive digest mismatch')
+            selected=select_release(releases,state['highestRun'],work)
+            if selected is None: return {'status':'no_approved_release','commit':state.get('commit')}
+            manifest,archive=selected;run_id=manifest['runId']
             state.update(highestRun=run_id,status='staging',requestedCommit=manifest['commit'])
             write_state(state)
             candidate=RELEASES/(manifest['commit']+'-'+str(run_id))
@@ -166,10 +202,10 @@ def update():
             extract(archive,candidate)
             build=json.loads((candidate/'BUILD.json').read_text())
             if build!={'commit':manifest['commit'],'architecture':'aarch64','python':'3.13'}: raise ValueError('Wrong release target')
-            subprocess.run(['/usr/bin/python3','-m','venv',str(candidate/'.venv')],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            subprocess.run([PYTHON,'-m','venv',str(candidate/'.venv')],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             subprocess.run([str(candidate/'.venv/bin/python'),'-m','pip','install','--no-index','--find-links',str(candidate/'wheels'),'-r',str(candidate/'requirements.txt')],check=True,timeout=180,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             subprocess.run([str(candidate/'.venv/bin/python'),'-m','pip','check'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-            subprocess.run(['/usr/bin/python3','/usr/local/lib/nabi-release/verify_candidate.py',str(candidate)],check=True,timeout=30,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            subprocess.run([PYTHON,'/usr/local/lib/nabi-release/verify_candidate.py',str(candidate)],check=True,timeout=30,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             os.umask(0o077)
             # Schema changes are additive. Never restore an old database over new private writes.
             with sqlite3.connect('/var/lib/nabi-brief/brief.sqlite3') as db,sqlite3.connect(STATE/('backup-'+str(run_id)+'.sqlite3')) as backup: db.backup(backup)
@@ -187,8 +223,10 @@ def update():
 if __name__=='__main__':
     os.umask(0o077)
     try: print(json.dumps(update()))
-    except Exception:
-        if (STATE/'state.json').exists():
+    except Exception as error:
+        python_failure=isinstance(error,RuntimeError) and str(error).startswith('Python 3.13 required')
+        if not python_failure and (STATE/'state.json').exists():
             state=json.loads((STATE/'state.json').read_text())
             if state.get('status')=='staging': state['status']='failed_before_switch';write_state(state)
-        print(json.dumps({'status':'failed','reason':'verification_or_deployment_failed'}));raise SystemExit(1)
+        reason=str(error) if python_failure else 'verification_or_deployment_failed'
+        print(json.dumps({'status':'failed','reason':reason}));raise SystemExit(1)

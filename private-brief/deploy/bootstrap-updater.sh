@@ -1,6 +1,11 @@
 #!/bin/sh
 # Run from reviewed staged deploy directory only AFTER specific updater/access approval.
 set -eu
+# Refuse an incompatible/missing interpreter before any persistent mutation.
+if ! /usr/bin/python3.13 -c 'import sys,venv,ensurepip; sys.exit(0 if sys.version_info[:2] == (3,13) else 1)' 2>/dev/null; then
+    echo 'Python 3.13 required at /usr/bin/python3.13; install Python 3.13 with venv support before bootstrap. Production unchanged.' >&2
+    exit 1
+fi
 test "$(id -u)" = 0
 test "$(uname -m)" = aarch64
 test -d /opt/nabi-brief/.venv

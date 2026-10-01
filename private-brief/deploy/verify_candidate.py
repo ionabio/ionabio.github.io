@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.13
 """Production-mode auth regression with isolated synthetic state; prints no secrets."""
 import os
 import pwd

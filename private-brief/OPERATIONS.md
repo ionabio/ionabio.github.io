@@ -152,6 +152,14 @@ GitHub CLI 2.102.0 with vendor SHA256 and root-owned updater policy, creates a r
 directory/current symlink and service overrides. It preserves the old `/opt/nabi-brief`
 tree, environment, tunnel and private database. It enables only the code updater timer.
 
+The release updater requires `/usr/bin/python3.13`, including `venv` and `ensurepip`.
+Bootstrap and updater both check this before persistent changes; bootstrap never
+silently installs or substitutes another Python version. The updater service,
+candidate venv and authentication verifier all explicitly use Python 3.13, matching
+the CPython 3.13 wheelhouse. Install that interpreter through reviewed host maintenance
+first if it is absent; the older general installation guide does not set this release
+updater's interpreter compatibility policy.
+
 The updater checks cryptographic signature, exact main-branch workflow certificate,
 attested source commit, locally pinned workflow file hash, manifest expiry, monotonic
 run ID, archive SHA256, ARM64/Python target and safe archive members. Workflow policy
@@ -165,6 +173,14 @@ Schema additions are backward compatible; rollback never overwrites private writ
 Preflight/deployment failure requires a newly approved release run; rejected run IDs are
 not repeatedly applied. Keep disk capacity monitored; backups/releases are retained
 until a separately reviewed retention policy is implemented.
+
+Release discovery follows all API pages and examines candidates in descending run-ID
+order, above the durable highest-run floor. Each candidate must pass both attestation
+checks, signed manifest/date validation, local workflow policy and archive digest
+verification before selection. Missing/invalid higher releases are skipped without
+advancing that floor; they cannot hide a lower approved eligible release. After a
+verified release enters staging, deployment failure still consumes its run ID and
+requires a newly approved run; it never falls back to an older deployment.
 
 Paths and units after bootstrap:
 
