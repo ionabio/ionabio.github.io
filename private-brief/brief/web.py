@@ -17,6 +17,7 @@ def create_app(config=None):
     app.config.update(SECRET_KEY=os.environ.get('BRIEF_SESSION_SECRET'),PASSWORD_HASH=os.environ.get('BRIEF_PASSWORD_HASH'),DATABASE=os.environ.get('BRIEF_DATABASE'),PUBLIC_ORIGIN=os.environ.get('BRIEF_PUBLIC_ORIGIN'),MEDIA_DIR=os.environ.get('BRIEF_MEDIA_DIR'),VAPID_PUBLIC_KEY=os.environ.get('BRIEF_VAPID_PUBLIC_KEY',''),SESSION_COOKIE_SECURE=True,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE='Strict',PERMANENT_SESSION_LIFETIME=timedelta(hours=12),MAX_CONTENT_LENGTH=32768)
     app.config.update(VAPID_PRIVATE_KEY=os.environ.get('BRIEF_VAPID_PRIVATE_KEY'),VAPID_SUBJECT=os.environ.get('BRIEF_VAPID_SUBJECT'))
     if config: app.config.update(config)
+    app.config.setdefault('ENROLLMENT_ENABLED',os.environ.get('BRIEF_ENROLLMENT_ENABLED')=='true')
     if not all(app.config.get(k) for k in ('SECRET_KEY','PASSWORD_HASH','DATABASE','PUBLIC_ORIGIN')):
         raise RuntimeError('Required private deployment settings missing')
     dbpath=Path(app.config['DATABASE']).resolve()
@@ -135,4 +136,6 @@ def create_app(config=None):
     def worker(): return send_from_directory(root/'assets','sw.js')
     from .publishing import register
     register(app,store)
+    from .enrollment import register as register_enrollment
+    register_enrollment(app,store)
     return app

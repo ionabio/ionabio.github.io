@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS locks(name TEXT PRIMARY KEY, expires REAL);
 CREATE TABLE IF NOT EXISTS drafts(date TEXT PRIMARY KEY,payload TEXT,hash TEXT,approved_hash TEXT);
 CREATE TABLE IF NOT EXISTS publishers(id TEXT PRIMARY KEY,token_hash TEXT UNIQUE,expires REAL,revoked INTEGER NOT NULL DEFAULT 0,scopes TEXT);
 CREATE TABLE IF NOT EXISTS publisher_rates(id TEXT PRIMARY KEY,count INTEGER,until REAL);
+CREATE TABLE IF NOT EXISTS publisher_devices(device_hash TEXT PRIMARY KEY,user_hash TEXT UNIQUE,expires REAL,status TEXT,last_poll REAL DEFAULT 0,interval REAL DEFAULT 5);
+CREATE TABLE IF NOT EXISTS publisher_grants(id TEXT PRIMARY KEY,client_id TEXT,expires REAL,absolute_expires REAL,revoked INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS publisher_refreshes(token_hash TEXT PRIMARY KEY,grant_id TEXT,expires REAL,used_at REAL);
+CREATE TABLE IF NOT EXISTS publisher_grant_access(publisher_id TEXT PRIMARY KEY,grant_id TEXT);
 '''
 class Store:
     def __init__(self, path):
