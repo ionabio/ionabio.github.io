@@ -22,14 +22,15 @@ jobs:
       - name: Cloud-to-Pi anonymous boundary probe (no credentials or content)
         run: |
           python - <<'PY'
-          from urllib.request import urlopen
+          from urllib.request import urlopen,Request
           from urllib.error import HTTPError
           import json
-          with urlopen('https://brief.nabi.be/health',timeout=20) as r:
+          probe=lambda path:Request('https://brief.nabi.be'+path,headers={'User-Agent':'NabiBrief-Cloud/1.0'})
+          with urlopen(probe('/health'),timeout=20) as r:
               assert r.status==200 and json.load(r)['status']=='ok'
               assert 'no-store' in r.headers.get('Cache-Control','')
           try:
-              urlopen('https://brief.nabi.be/api/briefs',timeout=20)
+              urlopen(probe('/api/briefs'),timeout=20)
               raise AssertionError('Anonymous brief API unexpectedly served content')
           except HTTPError as r:
               assert r.code==401 and 'no-store' in r.headers.get('Cache-Control','')

@@ -39,7 +39,7 @@ def main():
         if target==root or root in target.parents: p.error('Private output must be outside checkout')
     class NoRedirect(HTTPRedirectHandler):
         def redirect_request(self,*args): return None
-    req=Request('https://brief.nabi.be'+PREFIX+paths[a.operation],data=json.dumps(payload,allow_nan=False).encode() if payload is not None else None,headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+    req=Request('https://brief.nabi.be'+PREFIX+paths[a.operation],data=json.dumps(payload,allow_nan=False).encode() if payload is not None else None,headers={'Authorization':'Bearer '+token,'Content-Type':'application/json','User-Agent':'NabiBrief-Cloud/1.0'})
     try:
         with build_opener(NoRedirect).open(req,timeout=45) as response:
             data=response.read(1000001)
