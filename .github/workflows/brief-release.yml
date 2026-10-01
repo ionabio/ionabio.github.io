@@ -16,6 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   select:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       commit: ${{ steps.select.outputs.commit }}

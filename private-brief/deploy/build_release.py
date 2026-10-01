@@ -4,6 +4,7 @@ import json
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 from pathlib import Path
@@ -17,7 +18,7 @@ def main():
         for name in ('brief','templates','assets'):
             shutil.copytree(root/name,stage/name,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
         shutil.copyfile(root/'requirements-release.txt',stage/'requirements.txt')
-        subprocess.run(['python','-m','pip','wheel','--wheel-dir',str(stage/'wheels'),'-r',str(stage/'requirements.txt')],check=True)
+        subprocess.run([sys.executable,'-m','pip','wheel','--wheel-dir',str(stage/'wheels'),'-r',str(stage/'requirements.txt')],check=True)
         (stage/'BUILD.json').write_text(json.dumps({'commit':a.commit,'architecture':'aarch64','python':'3.13'}))
         with tarfile.open(out/'brief-arm64.tar.gz','w:gz') as tar:
             for child in sorted(stage.iterdir()): tar.add(child,arcname=child.name)
