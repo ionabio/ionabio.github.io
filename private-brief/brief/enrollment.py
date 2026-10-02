@@ -4,6 +4,7 @@ No client registration, redirects, general identity administration, or token esc
 Rotating refresh is atomic. An ambiguous consumed response requires reconnection.
 """
 import json
+import ipaddress
 import re
 import secrets
 import time
@@ -65,11 +66,12 @@ def register(app, store):
             abort(400)
         if request.form.get('client_id') != CLIENT_ID:
             abort(400)
-        if not rate('enrollment:machine', 120):
-            abort(429)
         return request.form
 
     def issue(db, grant, now):
+        # Rotation replaces the previous access credential; never accumulate live tokens.
+        db.execute('DELETE FROM publishers WHERE id IN (SELECT publisher_id FROM publisher_grant_access WHERE grant_id=?)', (grant['id'],))
+        db.execute('DELETE FROM publisher_grant_access WHERE grant_id=?', (grant['id'],))
         access, refresh = secrets.token_urlsafe(48), secrets.token_urlsafe(48)
         publisher_id = 'dottie:' + secrets.token_hex(16)
         refresh_expires = min(now + REFRESH_SECONDS, grant['absolute_expires'])
@@ -86,7 +88,14 @@ def register(app, store):
     @app.post(PREFIX + '/enrollment/device')
     def device():
         machine({'client_id'})
-        if not rate('enrollment:device', 10, 3600):
+        source = request.remote_addr or 'unknown'
+        # Only opt in behind the verified local Cloudflare Tunnel listener.
+        if app.config.get('ENROLLMENT_TRUST_CLOUDFLARE') and source in ('127.0.0.1', '::1'):
+            try:
+                source = str(ipaddress.ip_address(request.headers.get('CF-Connecting-IP', '')))
+            except ValueError:
+                abort(400)
+        if not rate('enrollment:device:' + digest(source), 10, 3600):
             abort(429)
         device_code = secrets.token_urlsafe(48)
         user_code = ''.join(secrets.choice(CODE_ALPHABET) for _ in range(10))
@@ -109,6 +118,10 @@ def register(app, store):
                 return error('invalid_grant')
             now, key = time.time(), digest(body['device_code'])
             with store.connect() as db:
+                known = db.execute('SELECT 1 FROM publisher_devices WHERE device_hash=?', (key,)).fetchone()
+            if known and not rate('enrollment:poll:' + key, 120):
+                abort(429)
+            with store.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 row = db.execute('SELECT * FROM publisher_devices WHERE device_hash=?', (key,)).fetchone()
                 if not row or row['expires'] <= now:
@@ -123,6 +136,9 @@ def register(app, store):
                 db.execute('UPDATE publisher_devices SET last_poll=? WHERE device_hash=?', (now, key))
                 if row['status'] != 'approved':
                     return error('authorization_pending')
+                # This fixed integration has exactly one active publishing grant.
+                for previous in db.execute('SELECT id FROM publisher_grants WHERE client_id=? AND revoked=0', (CLIENT_ID,)).fetchall():
+                    revoke(db, previous['id'])
                 grant_id = secrets.token_hex(16)
                 absolute_expires = now + GRANT_SECONDS
                 db.execute('INSERT INTO publisher_grants VALUES (?,?,?,?,0)', (grant_id, CLIENT_ID, now + REFRESH_SECONDS, absolute_expires))
@@ -134,6 +150,10 @@ def register(app, store):
             if not opaque(body['refresh_token']):
                 return error('invalid_grant')
             now, key = time.time(), digest(body['refresh_token'])
+            with store.connect() as db:
+                known = db.execute('SELECT grant_id FROM publisher_refreshes WHERE token_hash=?', (key,)).fetchone()
+            if known and not rate('enrollment:refresh:' + known['grant_id'], 120):
+                abort(429)
             with store.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 row = db.execute('SELECT * FROM publisher_refreshes WHERE token_hash=?', (key,)).fetchone()
@@ -163,6 +183,7 @@ def register(app, store):
             if action == 'revoke':
                 with store.connect() as db:
                     db.execute('BEGIN IMMEDIATE')
+                    db.execute("UPDATE publisher_devices SET status='denied' WHERE status IN ('pending','approved')")
                     for row in db.execute('SELECT id FROM publisher_grants WHERE client_id=?', (CLIENT_ID,)).fetchall():
                         revoke(db, row['id'])
                 message = 'De verbinding is ingetrokken. Dottie kan niet meer publiceren.'

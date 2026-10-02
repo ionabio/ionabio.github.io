@@ -267,8 +267,14 @@ Ordinary draft approval/publication exact-hash idempotency is unchanged.
 
 Standard device errors are HTTP 400 with `error` authorization_pending, slow_down,
 access_denied, expired_token or invalid_grant. Scope/media/size/header rejection
-continues to use HTTP 400/403/413/415. Persistent machine budget is 120/minute;
-new device requests are globally limited to ten/hour, valid for ten minutes.
+continues to use HTTP 400/403/413/415. Known device polling and renewal use separate persistent 120/minute budgets per
+device and grant. Publishing uses a grant-stable 60/minute budget across rotation.
+New device requests are limited to ten/hour per source, valid for ten minutes.
+For the verified loopback-only Cloudflare Tunnel listener, enable
+`BRIEF_ENROLLMENT_TRUST_CLOUDFLARE=true` to use Cloudflare-validated client IPs;
+never enable this behind an untrusted proxy or a remotely reachable listener.
+Revocation also cancels all pending and approved unredeemed device codes.
+This fixed integration has one active grant; renewal replaces its access token.
 
 The owner-only `/connect` page can revoke all grants immediately. Local administrator
 `brief.identity revoke --id GENERATED_ACCESS_ID` also revokes that access token's

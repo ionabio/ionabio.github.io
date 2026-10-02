@@ -60,9 +60,10 @@ class EnrollmentTests(unittest.TestCase):
   self.assertEqual(creds['scope'].split(),SCOPES);self.assertNotIn('notify',SCOPES);self.assertEqual(creds['expires_in'],900)
   with self.store.connect() as db:snapshot=repr([tuple(r) for table in ('publisher_devices','publisher_grants','publisher_refreshes','publishers') for r in db.execute('SELECT * FROM '+table)])
   for secret in (d['device_code'],d['user_code'].replace('-',''),creds['access_token'],creds['refresh_token']):self.assertNotIn(secret,snapshot)
-  for r in (page,self.refresh(creds['refresh_token'])):self.assertIn('no-store',r.headers['Cache-Control'])
+  self.assertIn('no-store',page.headers['Cache-Control'])
   self.assertEqual(self.machine.post(PREFIX+'/notifications/2026-01-01',json={},headers={'Authorization':'Bearer '+creds['access_token']}).status_code,403)
   self.assertEqual(self.machine.get('/api/briefs',headers={'Authorization':'Bearer '+creds['access_token']}).status_code,401)
+  self.assertIn('no-store',self.refresh(creds['refresh_token']).headers['Cache-Control'])
  def test_rotation_replay_revokes_family(self):
   a=self.enroll();r=self.refresh(a['refresh_token']);self.assertEqual(r.status_code,200);b=r.json
   self.assertNotEqual(a['refresh_token'],b['refresh_token']);self.assertEqual(self.status(b['access_token']),409)
@@ -115,4 +116,32 @@ class EnrollmentTests(unittest.TestCase):
    with client.session_transaction(base_url='https://brief.test') as s:csrf=s['csrf']
    r=client.post('/login?next='+target,base_url='https://brief.test',data={'password':self.password,'csrf':csrf},headers={'Origin':'https://brief.test'})
    self.assertEqual(r.status_code,302);self.assertEqual(r.location,expected)
+ def test_revoke_cancels_unredeemed_approved_and_pending_codes(self):
+  approved=self.start();pending=self.start();self.consent(approved['user_code'])
+  self.consent('',action='revoke')
+  for device in (approved,pending):self.assertEqual(self.exchange(device).json['error'],'access_denied')
+  with self.store.connect() as db:self.assertEqual(db.execute('SELECT count(*) FROM publisher_grants').fetchone()[0],0)
+ def test_rotation_preserves_quota_and_single_live_access(self):
+  a=self.enroll()
+  for _ in range(60):self.assertEqual(self.status(a['access_token']),409)
+  b=self.refresh(a['refresh_token']).json
+  self.assertEqual(self.status(b['access_token']),429)
+  with self.store.connect() as db:self.assertEqual(db.execute('SELECT count(*) FROM publishers WHERE revoked=0').fetchone()[0],1)
+ def test_public_enrollment_exhaustion_does_not_block_refresh_or_known_device(self):
+  creds=self.enroll();device=self.start();self.consent(device['user_code'])
+  for _ in range(8):self.assertEqual(self.post('device',{}).status_code,200)
+  self.assertEqual(self.post('device',{}).status_code,429)
+  self.assertEqual(self.refresh(creds['refresh_token']).status_code,200)
+  self.assertEqual(self.exchange(device).status_code,200)
+ def test_new_enrollment_replaces_previous_grant(self):
+  first=self.enroll();second=self.enroll()
+  self.assertEqual(self.status(first['access_token']),401)
+  self.assertEqual(self.refresh(first['refresh_token']).status_code,400)
+  self.assertEqual(self.status(second['access_token']),409)
+ def test_creation_budget_by_verified_edge_source(self):
+  self.app.config['ENROLLMENT_TRUST_CLOUDFLARE']=True
+  for _ in range(10):self.assertEqual(self.post('device',{},headers={'CF-Connecting-IP':'192.0.2.1'}).status_code,200)
+  self.assertEqual(self.post('device',{},headers={'CF-Connecting-IP':'192.0.2.1'}).status_code,429)
+  self.assertEqual(self.post('device',{},headers={'CF-Connecting-IP':'192.0.2.2'}).status_code,200)
+  self.assertEqual(self.post('device',{},headers={'CF-Connecting-IP':'invalid'}).status_code,400)
 if __name__=='__main__':unittest.main()
