@@ -22,8 +22,12 @@ def authorize(store):
     with store.connect() as db:
         db.execute('BEGIN IMMEDIATE')
         row = db.execute('SELECT * FROM publishers WHERE token_hash=?', (digest(token),)).fetchone() if 40 <= len(token) <= 200 else None
+        grant = None
         valid = row and not row['revoked'] and row['expires'] > now
-        bucket = 'identity:'+row['id'] if valid else 'unauthenticated'
+        if valid:
+            grant = db.execute('SELECT g.id,g.revoked,g.expires,g.absolute_expires FROM publisher_grants g JOIN publisher_grant_access a ON a.grant_id=g.id WHERE a.publisher_id=?',(row['id'],)).fetchone()
+            if grant and (grant['revoked'] or min(grant['expires'],grant['absolute_expires']) <= now): valid = False
+        bucket = ('grant:'+grant['id'] if grant else 'identity:'+row['id']) if valid else 'unauthenticated'
         previous = db.execute('SELECT count,until FROM publisher_rates WHERE id=?',(bucket,)).fetchone()
         count = previous['count'] if previous and previous['until'] > now else 0
         until = previous['until'] if previous and previous['until'] > now else now+60

@@ -41,7 +41,12 @@ def main():
             with os.fdopen(fd,'w') as f: f.write(token)
             db.execute('INSERT INTO publishers VALUES (?,?,?,0,?)',(args.id,digest(token),expires.timestamp(),json.dumps(sorted(scopes))))
     elif args.action=='revoke':
-        with store.connect() as db: db.execute('UPDATE publishers SET revoked=1 WHERE id=?',(args.id,))
+        with store.connect() as db:
+            db.execute('UPDATE publishers SET revoked=1 WHERE id=?',(args.id,))
+            grant=db.execute('SELECT grant_id FROM publisher_grant_access WHERE publisher_id=?',(args.id,)).fetchone()
+            if grant:
+                from .enrollment import revoke
+                revoke(db,grant['grant_id'])
     with store.connect() as db:
         row=db.execute('SELECT id,expires,revoked,scopes FROM publishers WHERE id=?',(args.id,)).fetchone()
     print(json.dumps(dict(row) if row else {'status':'missing'}))

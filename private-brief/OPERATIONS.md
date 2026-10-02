@@ -211,3 +211,92 @@ independent of Windows. Authenticated cloud status and a signed outbound release
 deployment still require actual setup/testing; neither can be inferred from local tests.
 Do not enable any daily schedule until live source access, cloud operation, publication
 and phone opt-in are verified. Do not report today's brief published unless status proves it.
+
+## Prepared phone enrollment and automatic renewal (disabled)
+
+This extension is a draft and is **not active in production**. Its runtime flag
+`BRIEF_ENROLLMENT_ENABLED=true` must not be set until the bridge and backend use
+this contract, hosted credential storage has been explicitly approved, and the
+signed release has passed the existing human environment gate. The existing
+Sites integration and owner-only audience are reused; Developer mode stays off.
+
+A phone can visit `/connect` after normal portal sign-in, enter the code shown by
+the owner-only Sites bridge, review the five scopes, and approve. This consent
+never authorizes notifications, identity administration, server access or code
+deployment. Never initiate a real enrollment while the owner is asleep, and never
+approve an unsolicited code: the client identifier is public, so the owner must
+verify that the code was requested in their existing private Sites connection.
+
+The machine exchange uses RFC 8628 device authorization and the refresh-token
+rotation guidance in RFC 9700. Only the fixed client identifier
+`appgprj_6abe75379874819189b7c95bebf9e21c` is accepted. No client registration,
+arbitrary scope, callback URI, destination URL or authorization redirect exists.
+Requests must omit Cookie and Origin; the browser consent/revocation route keeps
+normal login, exact Origin and CSRF protection. All responses remain private/no-store.
+
+Fixed endpoint origin: `https://brief.nabi.be:443`. The bridge must disable redirects,
+send `User-Agent: NabiBrief-cloud/1`, and enforce a 4 KiB request limit. All requests
+below are `application/x-www-form-urlencoded`; duplicate or extra fields are rejected.
+
+- POST `/api/publisher/v1/enrollment/device`: `client_id` only. Reply contains
+  `device_code` (private), `user_code` (phone consent code), `verification_uri`
+  (the fixed portal `/connect`), `expires_in=600`, `interval=5`.
+- POST `/api/publisher/v1/enrollment/token`: `client_id`,
+  `grant_type=urn:ietf:params:oauth:grant-type:device_code`, `device_code`.
+  Poll no faster than interval; `slow_down` adds five seconds to the interval.
+- POST the same token endpoint to renew: `client_id`, `grant_type=refresh_token`,
+  `refresh_token`. Only one serialized request may use a refresh token.
+
+Token response: `access_token`, `refresh_token`, `token_type=Bearer`, `expires_in`
+(up to 900 seconds), `scope=approve prepare publish review status`,
+`refresh_expires_at` (Unix seconds), `grant_id`, `grant_expires_at` (Unix seconds).
+Access is at most 15 minutes; refresh expires after 30 days without successful
+renewal; consent has an absolute one-year cap, disclosed on the phone page.
+Successful renewal never extends the absolute cap. Annual reconnect, prolonged
+inactivity, revocation or ambiguous failed renewal can still require phone consent.
+Do not promise permanent operation without any future owner involvement.
+
+The issuer stores only SHA256 hashes of random credentials. Consume/rotation and
+family revocation are serialized with SQLite BEGIN IMMEDIATE. A used refresh
+replayed by any caller revokes its entire grant and every associated access token.
+Concurrent refresh therefore fails closed; the bridge must hold a durable single-
+writer lock and persist the newly returned pair before issuing an API request.
+A successful response lost during transport cannot safely be recovered: never
+retry a possibly committed device exchange/refresh; mark reconnect_required.
+Ordinary draft approval/publication exact-hash idempotency is unchanged.
+
+Standard device errors are HTTP 400 with `error` authorization_pending, slow_down,
+access_denied, expired_token or invalid_grant. Scope/media/size/header rejection
+continues to use HTTP 400/403/413/415. Known device polling and renewal use separate persistent 120/minute budgets per
+device and grant. Publishing uses a grant-stable 60/minute budget across rotation.
+New device requests are limited to ten/hour per source, valid for ten minutes.
+For the verified loopback-only Cloudflare Tunnel listener, enable
+`BRIEF_ENROLLMENT_TRUST_CLOUDFLARE=true` to use Cloudflare-validated client IPs;
+never enable this behind an untrusted proxy or a remotely reachable listener.
+Revocation also cancels all pending and approved unredeemed device codes.
+This fixed integration has one active grant; renewal replaces its access token.
+
+The owner-only `/connect` page can revoke all grants immediately. Local administrator
+`brief.identity revoke --id GENERATED_ACCESS_ID` also revokes that access token's
+whole grant, so renewal cannot circumvent administrative revocation. Existing static
+identities retain their original scope/expiry/revocation semantics.
+
+**Hosted storage review remains required.** The Sites runtime secret setter cannot
+be populated opaquely from an issuer response by the current tools. A private hosted
+database protected by provider encryption at rest is a separate design choice from
+the runtime secret facility originally requested. Database/editor access holders and
+server code can retrieve its credentials. Do not activate that alternative without
+explicit informed approval, do not call provider encryption application-level key
+separation, and preserve owner-only access. Never expose tokens/device_code through
+MCP results, chat, Git, source logs or public endpoint responses. The bridge may
+return only consent code/link and safe connection status to its owner.
+
+Required validation before activation: ARM64/Python 3.13 tests/package verification,
+expiry/denial/CSRF/machine Cookie+Origin rejection, duplicate/oversized form rejection,
+concurrent device redemption/refresh, replay family revocation, absolute/idle limits,
+no plaintext credentials in issuer database, and live read-only cloud status first.
+Do not publish a brief, send notifications or enable the daily publishing schedule
+as part of enrollment validation.
+
+Standards: https://www.rfc-editor.org/rfc/rfc8628.html and
+https://www.rfc-editor.org/rfc/rfc9700.html .

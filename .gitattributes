@@ -1,0 +1,2 @@
+.github/workflows/brief-*.yml text eol=lf
+private-brief/deploy/*.sh text eol=lf
