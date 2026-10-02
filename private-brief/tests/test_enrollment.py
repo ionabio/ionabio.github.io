@@ -116,6 +116,14 @@ class EnrollmentTests(unittest.TestCase):
    with client.session_transaction(base_url='https://brief.test') as s:csrf=s['csrf']
    r=client.post('/login?next='+target,base_url='https://brief.test',data={'password':self.password,'csrf':csrf},headers={'Origin':'https://brief.test'})
    self.assertEqual(r.status_code,302);self.assertEqual(r.location,expected)
+ def test_phone_can_withdraw_first_approved_consent_before_redemption(self):
+  device=self.start();page=self.consent(device['user_code'])
+  self.assertIn(b'value="revoke"',page.data)
+  self.assertIn(b'name="csrf"',page.data)
+  with self.store.connect() as db:self.assertEqual(db.execute('SELECT count(*) FROM publisher_grants').fetchone()[0],0)
+  self.assertIn(b'value="revoke"',self.browser.get('/connect',base_url='https://brief.test').data)
+  self.consent('',action='revoke')
+  self.assertEqual(self.exchange(device).json['error'],'access_denied')
  def test_revoke_cancels_unredeemed_approved_and_pending_codes(self):
   approved=self.start();pending=self.start();self.consent(approved['user_code'])
   self.consent('',action='revoke')

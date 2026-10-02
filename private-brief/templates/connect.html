@@ -7,5 +7,5 @@
 <p>Gebruik alleen een code die je zojuist zelf in jouw privéverbinding met dottie hebt aangevraagd. Deel een code niet en keur geen onverwacht verzoek goed.</p>
 {% if message %}<p role="status">{{message}}</p>{% endif %}
 <form method="post"><input type="hidden" name="csrf" value="{{csrf()}}"><label>Verbindingscode <input name="userCode" autocomplete="off" autocapitalize="characters" maxlength="11" pattern="[A-Za-z2-9]{5}-?[A-Za-z2-9]{5}" placeholder="XXXXX-XXXXX" required></label><button name="action" value="approve">Verbinden</button> <button name="action" value="deny">Weigeren</button></form>
-{% if active %}<h2>Bestaande verbinding</h2><form method="post"><input type="hidden" name="csrf" value="{{csrf()}}"><button name="action" value="revoke">Dottie-toegang intrekken</button></form>{% endif %}
+<h2>Verbinding intrekken</h2><p>Annuleert ook een goedgekeurde code die nog niet is gebruikt.</p><form method="post"><input type="hidden" name="csrf" value="{{csrf()}}"><button name="action" value="revoke">Dottie-toegang intrekken</button></form>
 <p><a href="/">Terug naar jouw ochtendbrief</a></p></main></body></html>
