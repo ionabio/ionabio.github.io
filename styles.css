@@ -1002,3 +1002,17 @@ h3 {
     height: 220px;
   }
 }
+
+/* Subdomain projects share the existing responsive card layout. */
+.filament-card, .brief-card { transition: transform .2s, box-shadow .2s; }
+.filament-card:hover, .brief-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px #2829220c; }
+.filament-art, .brief-art { display: grid; place-items: center; }
+.filament-art { background: #e0e9e6; }
+.brief-art { background: #efe3d5; }
+.filament-spool { width: 174px; height: 174px; border-radius: 50%; background: repeating-radial-gradient(circle, #43877b 0 4px, #74a99a 4px 7px); border: 12px solid #d1d8cb; box-shadow: 8px 9px 0 #bbcbbf; display: grid; place-items: center; transform: rotate(-10deg); }
+.filament-spool span { width: 58px; height: 58px; border: 10px solid #d1d8cb; border-radius: 50%; background: #e0e9e6; }
+.brief-paper { width: 157px; height: 171px; background: #fcfbf8; border: 1px solid #cab9a3; border-radius: 5px; box-shadow: 8px 9px 0 #dcccb7; padding: 30px 23px; transform: rotate(8deg); }
+.brief-paper span { display: block; height: 7px; margin-bottom: 13px; background: #b6aa96; border-radius: 2px; }
+.brief-paper span:first-child { height: 20px; width: 75%; background: #a94827; margin-bottom: 23px; }
+.brief-paper span:last-child { width: 65%; }
+@media (prefers-reduced-motion: reduce) { .filament-card, .brief-card { transition: none; } }
