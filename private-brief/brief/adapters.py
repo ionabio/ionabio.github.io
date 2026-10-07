@@ -57,9 +57,11 @@ def deal(item, date):
     if any(k not in item for k in required):
         raise ValueError('Deal missing verified fields')
     url = urlsplit(item['sourceUrl'])
-    allowed = {'AH Belgium': ('www.ah.be',), 'Delhaize Belgium': ('www.delhaize.be',)}
+    allowed = {'AH Belgium': ('www.ah.be',), 'Delhaize Belgium': ('www.delhaize.be',), 'Action Belgium': ('www.action.com',)}
     if url.scheme != 'https' or url.hostname not in allowed.get(item['retailer'],()) or url.username or url.port not in (None,443):
         raise ValueError('Untrusted Belgian deal source')
+    if item['retailer'] == 'Action Belgium' and not re.fullmatch(r'/nl-be/p/[0-9]+/[^?#]*', url.path):
+        raise ValueError('Belgian Action product URL required')
     for stamp in (item['validFrom'],item['validTo'],date):
         datetime.strptime(stamp,'%Y-%m-%d')
     if not item['validFrom'] <= date <= item['validTo']:

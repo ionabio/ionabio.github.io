@@ -72,6 +72,12 @@ def register(app, store):
             row = db.execute('SELECT * FROM drafts WHERE date=?',(date,)).fetchone()
         if not row: abort(404)
         return jsonify(date=date,hash=row['hash'],approved=row['hash']==row['approved_hash'],brief=json.loads(row['payload']))
+    @api.get('/sources/offerhunter')
+    def offerhunter_summary():
+        permission('review')
+        from .offerhunter import read_snapshot
+        # Fixed path in production: no caller-controlled path, refresh or delivery acknowledgement.
+        return jsonify(read_snapshot(now=app.config.get('PUBLISHER_NOW')))
     @api.post('/drafts/<date>/approve')
     def approval(date):
         permission('approve'); date_check(date)
