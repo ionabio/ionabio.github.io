@@ -84,6 +84,16 @@ class SnapshotTests(unittest.TestCase):
         self.assertNotIn('never-return',json.dumps(result))
         observation['observedAt']='2026-10-08T04:02:00Z'
         self.assertEqual(self.read()['offerhunter']['priceAlerts'],[])
+    def test_reviewed_delhaize_pdf_evidence_stays_separate_from_trusted_retailer_url(self):
+        item=self.data['topOffers'].pop();self.data['returning']=[]
+        item.update(retailer='Delhaize Belgium',sourceUrl='https://www.delhaize.be/nl/folder-volgende-week',validFrom='2026-10-09',evidenceUrl='https://view.publitas.com/11013/1234567/pdfs/00000000-0000-0000-0000-000000000000.pdf',coverDatesVerified=True,evidencePage=5)
+        del item['evidence'];self.data['upcomingOffers']=[item]
+        result=self.read();self.assertEqual(len(result['offerhunter']['upcoming']),1)
+        self.assertNotIn('briefDeal',result['offerhunter']['upcoming'][0])
+        for key,value in [('evidenceUrl','https://view.publitas.com/99999/1234567/pdfs/00000000-0000-0000-0000-000000000000.pdf'),('coverDatesVerified',False),('evidencePage',0),('sourceUrl','https://view.publitas.com/11013/1234567/pdfs/00000000-0000-0000-0000-000000000000.pdf')]:
+            previous=item[key];item[key]=value
+            self.assertEqual(self.read()['offerhunter']['upcoming'],[])
+            item[key]=previous
 
 
 class ReaderBoundaryTests(unittest.TestCase):

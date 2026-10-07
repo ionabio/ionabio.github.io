@@ -63,11 +63,21 @@ def offer(value, now, upcoming=False):
         if isinstance(result[key], bool) or not math.isfinite(float(result[key])) or float(result[key]) <= 0:
             raise ValueError('Invalid amount')
     if result['unit'] not in ('kg', 'l', 'item', 'stuk') or not result['name'].strip(): raise ValueError('Invalid product')
-    if 'evidenceUrl' in result: result['evidenceUrl'] = url(result['evidenceUrl'])
+    if 'evidenceUrl' in result:
+        document = urlsplit(result['evidenceUrl'])
+        # Delhaize's already-reviewed folder provider. Evidence links never authorize prices
+        # by themselves and never broaden the retailer sourceUrl allowlist.
+        publitas = (result['retailer'] == 'Delhaize Belgium' and document.scheme == 'https'
+                    and document.hostname == 'view.publitas.com' and not document.username
+                    and not document.password and document.port in (None, 443)
+                    and re.fullmatch(r'/11013/[0-9]+/pdfs/[a-f0-9-]{36}\.pdf', document.path)
+                    and result.get('coverDatesVerified') is True
+                    and isinstance(result.get('evidencePage'), int) and result['evidencePage'] > 0)
+        result['evidenceUrl'] = urlunsplit(('https', document.hostname, document.path, '', '')) if publitas else url(result['evidenceUrl'])
     if 'evidence' in value:
         result['evidence'] = evidence(value['evidence'], now)
         if urlsplit(result['evidence']['sourceUrl']).hostname != RETAILERS[result['retailer']]: raise ValueError('Evidence retailer mismatch')
-    elif result.get('coverDatesVerified') is not True or not isinstance(result.get('evidencePage'), int):
+    elif result.get('coverDatesVerified') is not True or not isinstance(result.get('evidencePage'), int) or result['evidencePage'] <= 0 or 'evidenceUrl' not in result:
         raise ValueError('Missing evidence')
     # Multi-variant family cards retain their pack/conditions but cannot invent exact unit comparisons.
     if not upcoming and result.get('exactVariant', result['retailer'] != 'Action Belgium') is True:
