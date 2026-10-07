@@ -222,6 +222,8 @@ Only active exact-variant offers with supported retailer/pack/validity/provenanc
 
 The Pi's existing OfferHunter timer owns refresh. The cloud workflow reads/waits for its fresh summary and does not create another refresh timer. Exposing `get_offerhunter_summary` in the existing owner-only Sites bridge requires a code/schema update in that bridge's source; it must call this fixed GET through its existing bearer transport and enforce the existing owner identity check. No new permission or token is needed. The five publishing actions and status response remain unchanged.
 
+Already-reviewed Delhaize folder PDF evidence may use `view.publitas.com/11013/<publication>/pdfs/<uuid>.pdf`, only with verified cover dates and a positive page number. This narrow evidence-link exception does not broaden the official retailer `sourceUrl` allowlist, freshness checks or offer-date validation. Future folder offers remain upcoming until their validity starts, and retained checks must be refreshed by the source owner before reuse.
+
 ## Prepared phone enrollment and automatic renewal (disabled)
 
 This extension is a draft and is **not active in production**. Its runtime flag
