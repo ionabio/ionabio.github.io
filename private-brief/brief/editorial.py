@@ -1,5 +1,6 @@
 """Draft, editorial selection, and publish approval are separate persistent stages."""
 import json
+import re
 from datetime import datetime
 from .adapters import digest
 
@@ -45,6 +46,42 @@ def publish_approved(store,date,expected_hash,now=None):
         existing=db.execute('SELECT hash FROM briefs WHERE date=?',(date,)).fetchone()
         if existing and existing[0]!=expected_hash: raise ValueError('Date already published')
         return {**run(store,json.loads(row['payload']),now=now,transaction=db),'hash':expected_hash}
+
+def replace_approved(store,date,expected_hash,published_hash,now=None):
+    """Explicit local owner maintenance; not registered in the machine/browser API.
+
+    Requires a freshly reviewed exact approved draft and a lease on the current
+    publication. The original snapshot and replacement commit share one transaction.
+    No notification or identity operation is performed here.
+    """
+    from .pipeline import clock,due,run
+    from .validation import validate_bundle
+    local=clock(now)
+    if date!=local.date().isoformat(): raise ValueError('Wrong Brussels date')
+    if any(not isinstance(h,str) or not re.fullmatch('[a-f0-9]{64}',h) for h in (expected_hash,published_hash)):
+        raise ValueError('Exact reviewed and published hashes required')
+    if not due(now): return {'status':'not_due','date':date,'hash':expected_hash}
+    with store.connect() as db:
+        db.execute('BEGIN IMMEDIATE')
+        draft=db.execute('SELECT * FROM drafts WHERE date=?',(date,)).fetchone()
+        previous=db.execute('SELECT * FROM briefs WHERE date=?',(date,)).fetchone()
+        if not draft or draft['hash']!=expected_hash or draft['approved_hash']!=expected_hash:
+            raise ValueError('Approval or draft changed')
+        bundle=json.loads(draft['payload'])
+        if digest(json.dumps(bundle,sort_keys=True,ensure_ascii=False))!=expected_hash:
+            raise ValueError('Draft content changed')
+        if not previous: raise ValueError('No existing publication to replace')
+        if previous['hash']==expected_hash:
+            return {'status':'unchanged','date':date,'hash':expected_hash}
+        if previous['hash']!=published_hash: raise ValueError('Publication changed')
+        validate_bundle(bundle,now)
+        revision=db.execute('SELECT COALESCE(MAX(revision),0)+1 FROM brief_revisions WHERE date=?',(date,)).fetchone()[0]
+        db.execute('INSERT INTO brief_revisions VALUES (?,?,?,?,?,?,?)',(date,revision,previous['hash'],previous['payload'],previous['published_at'],local.isoformat(),expected_hash))
+        result=run(store,bundle,now=now,transaction=db)
+        if result['status']!='published': raise ValueError('Replacement did not publish')
+        saved=db.execute('SELECT hash FROM briefs WHERE date=?',(date,)).fetchone()[0]
+        if saved!=expected_hash: raise ValueError('Replacement hash mismatch')
+        return {**result,'status':'replaced','hash':expected_hash,'previousHash':published_hash,'revision':revision}
 
 def reviewed_language(item,preferences):
     """Original AI-authored output is supplied with evidence and checked locally, no API call."""

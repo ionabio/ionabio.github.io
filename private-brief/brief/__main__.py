@@ -3,20 +3,23 @@ import json
 import os
 from pathlib import Path
 from .pipeline import run, clock
-from .editorial import prepare, approve, approved, reviewed_language, publish_approved
+from .editorial import prepare, approve, approved, reviewed_language, publish_approved, replace_approved
 from .push import notify
 from .store import Store
 
 def main():
     parser=argparse.ArgumentParser(description='Private morning brief tools. Only statuses go to stdout.')
-    parser.add_argument('command',choices=['prepare','approve','publish','status','serve','export-draft'])
+    parser.add_argument('command',choices=['prepare','approve','publish','replace-published','status','serve','export-draft'])
     parser.add_argument('--input',help='Private normalized input file')
     parser.add_argument('--output',help='Private draft export file')
     parser.add_argument('--date',default=clock().date().isoformat())
     parser.add_argument('--hash',help='Hash of reviewed draft; required for approval')
+    parser.add_argument('--published-hash',help='Exact current publication hash; required for local replacement')
     parser.add_argument('--database',default=os.environ.get('BRIEF_DATABASE'))
     parser.add_argument('--notify',action='store_true')
     args=parser.parse_args()
+    if args.command=='replace-published' and (not args.hash or not args.published_hash or args.notify):
+        parser.error('Replacement requires --hash and --published-hash and cannot send notifications')
     if not args.database: parser.error('Database path required')
     root=Path(__file__).resolve().parents[2]
     def private_path(value):
@@ -53,6 +56,8 @@ def main():
             if not row: raise ValueError('Missing draft')
             private_path(args.output).write_text(row[0],encoding='utf-8')
             result={'status':'exported','date':args.date}
+        elif args.command=='replace-published':
+            result=replace_approved(store,args.date,args.hash,args.published_hash)
         else:
             with store.connect() as db:
                 draft=db.execute('SELECT approved_hash FROM drafts WHERE date=?',(args.date,)).fetchone()

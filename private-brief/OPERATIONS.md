@@ -46,7 +46,7 @@ Changing a draft invalidates approval. `baseHash` implements compare-and-swap:
 initial creation requires null; later edits require the reviewed current hash.
 An identical retry returns the same hash and preserves approval. Approval and
 publication share the exact saved version; publication holds an SQLite writer lock
-through validation and commit. A published date is immutable through this API/CLI.
+through validation and commit. A published date is immutable through this API and the standard `publish` CLI command.
 Retries of that version return unchanged; a different version for the date is denied.
 The lower-level `pipeline.run` remains a library helper for synthetic tests, not an
 unrestricted machine endpoint.
@@ -300,3 +300,19 @@ as part of enrollment validation.
 
 Standards: https://www.rfc-editor.org/rfc/rfc8628.html and
 https://www.rfc-editor.org/rfc/rfc9700.html .
+
+## Explicit owner-requested same-day refresh
+
+When the owner explicitly asks to replace today's content, use local administrator maintenance after the normal prepare, full draft review and exact-hash approval. The machine/browser APIs remain unchanged and cannot replace an already published date. No new publisher scope, identity, endpoint or notification permission is added.
+
+1. Read the current `publishedHash` and `draftHash` using the existing status API. Prepare the improved, genuinely sourced current-day bundle with the correct `baseHash`; do not treat tomorrow's promotions as current offers.
+2. Review the entire exported draft, verify source scope/freshness and the server-returned hash, then approve exactly that hash through the existing workflow.
+3. Run the local command as the existing `nabi-brief` account, with both reviewed hashes explicitly supplied:
+
+```
+python -m brief replace-published --database /var/lib/nabi-brief/brief.sqlite3 --date YYYY-MM-DD --hash EXACT_NEW_APPROVED_HASH --published-hash EXACT_CURRENT_PUBLISHED_HASH
+```
+
+The current Brussels date and 06:00 gate apply. A changed/unapproved draft, mismatched canonical hash, stale source or changed current publication is rejected. The original publication is saved in the private `brief_revisions` table and the new approved payload becomes the current date's user-facing brief in one transaction. A failure rolls back both steps. Repeating the exact replacement returns `unchanged` without another revision. Source/draft content and snapshots remain in the private database; only statuses/hashes print.
+
+No notification is sent or delivery state reset. `--notify` is explicitly refused for this command. Existing API status automatically reports the active replacement's `publishedHash`, and the owner archive URL for that date reads the active payload. This command is for an explicit owner-requested correction, not automatic recurring replacement or a way to skip review.
