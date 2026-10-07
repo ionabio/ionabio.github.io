@@ -4,6 +4,7 @@ from contextlib import contextmanager
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS briefs(date TEXT PRIMARY KEY, hash TEXT, payload TEXT, published_at TEXT);
+CREATE TABLE IF NOT EXISTS brief_revisions(date TEXT NOT NULL,revision INTEGER NOT NULL,hash TEXT NOT NULL,payload TEXT NOT NULL,published_at TEXT NOT NULL,replaced_at TEXT NOT NULL,replacement_hash TEXT NOT NULL,PRIMARY KEY(date,revision));
 CREATE TABLE IF NOT EXISTS cache(key TEXT PRIMARY KEY, payload TEXT);
 CREATE TABLE IF NOT EXISTS subscriptions(id TEXT PRIMARY KEY, payload TEXT);
 CREATE TABLE IF NOT EXISTS deliveries(date TEXT, subscription TEXT, status TEXT, PRIMARY KEY(date,subscription));
