@@ -127,6 +127,10 @@ def read_snapshot(now=None, path=SUMMARY):
             if 'sourceUrl' in record: record['sourceUrl'] = url(record['sourceUrl'])
             if 'evidence' in source: record['evidence'] = evidence(source['evidence'], local)
             sources.append(record)
+        reviewed_seeds = []
+        for seed in data['coverage'].get('reviewedSeeds', []):
+            if not seed.get('private'):
+                reviewed_seeds.append(fields(seed, ('retailer', 'state', 'lastVerifiedAt', 'liveFetched')))
         alerts = []
         for raw_alert in data['priceAlerts'][:8]:
             try:
@@ -148,6 +152,6 @@ def read_snapshot(now=None, path=SUMMARY):
                 if not folder['validFrom'] <= local.date().isoformat() <= folder['validTo'] or not 0 <= (local-stamp(folder['checkedAt'])).total_seconds() <= 86400: raise ValueError('Invalid folder')
                 folders.append(folder)
             except (ValueError, TypeError, KeyError, AttributeError): rejected += 1
-        return {'status': 'ready', 'date': local.date().isoformat(), 'offerhunter': {'url': 'https://offerhunter.nabi.be/', 'preparedAt': data['preparedAt'], 'receipt': data['receipt'], 'offers': selected[:8], 'priceAlerts': alerts, 'folders': folders, 'upcoming': upcoming, 'coverage': {'finishedAt': data['coverage']['finishedAt'], 'sources': sources, 'rejectedRecords': rejected}, 'deliveryAcknowledged': False}}
+        return {'status': 'ready', 'date': local.date().isoformat(), 'offerhunter': {'url': 'https://offerhunter.nabi.be/', 'preparedAt': data['preparedAt'], 'receipt': data['receipt'], 'offers': selected[:8], 'priceAlerts': alerts, 'folders': folders, 'upcoming': upcoming, 'coverage': {'finishedAt': data['coverage']['finishedAt'], 'sources': sources, 'reviewedSeeds': reviewed_seeds, 'rejectedRecords': rejected}, 'deliveryAcknowledged': False}}
     except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):
         return waiting('unavailable')
