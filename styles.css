@@ -1016,3 +1016,6 @@ h3 {
 .brief-paper span:first-child { height: 20px; width: 75%; background: #a94827; margin-bottom: 23px; }
 .brief-paper span:last-child { width: 65%; }
 @media (prefers-reduced-motion: reduce) { .filament-card, .brief-card { transition: none; } }
+
+.offerhunter-art { background: #245b46; color: #d3ed8b; }
+.offerhunter-spark { display: block; font-size: 150px; line-height: 1; transform: rotate(-12deg); margin: auto; }
