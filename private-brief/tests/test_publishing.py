@@ -87,6 +87,28 @@ class PublishingTests(unittest.TestCase):
         other=self.prepare(b,base=h).json['hash']
         self.post('/drafts/'+self.date+'/approve',{'hash':other})
         self.assertEqual(self.post('/drafts/'+self.date+'/publish',{'hash':other}).status_code,409)
+    def test_six_am_gate_preserves_exact_approval_and_immutable_publication(self):
+        for name in ('calendar','todos','news'):
+            self.bundle[name]['checkedAt']='2026-09-30T05:50:00+02:00'
+        self.app.config['PUBLISHER_NOW']=datetime.fromisoformat('2026-09-30T05:59:59+02:00')
+        h=self.ready()
+        self.assertEqual(self.post('/drafts/'+self.date+'/publish',{'hash':h}).json['status'],'not_due')
+        with self.store.connect() as db:
+            self.assertEqual(db.execute('SELECT count(*) FROM briefs').fetchone()[0],0)
+            self.assertEqual(db.execute('SELECT approved_hash FROM drafts').fetchone()[0],h)
+        self.app.config['PUBLISHER_NOW']=datetime.fromisoformat('2026-09-30T06:00:00+02:00')
+        self.assertEqual(self.post('/drafts/'+self.date+'/publish',{'hash':'0'*64}).status_code,409)
+        self.assertEqual(self.post('/drafts/'+self.date+'/publish',{'hash':h}).json['status'],'published')
+        with self.store.connect() as db:
+            before=tuple(db.execute('SELECT hash,payload,published_at FROM briefs').fetchone())
+        self.app.config['PUBLISHER_NOW']=datetime.fromisoformat('2026-09-30T08:00:00+02:00')
+        self.assertEqual(self.post('/drafts/'+self.date+'/publish',{'hash':h}).json['status'],'unchanged')
+        changed=copy.deepcopy(self.bundle);changed['learning']['level']='B2+'
+        other=self.prepare(changed,base=h).json['hash']
+        self.post('/drafts/'+self.date+'/approve',{'hash':other})
+        self.assertEqual(self.post('/drafts/'+self.date+'/publish',{'hash':other}).status_code,409)
+        with self.store.connect() as db:
+            self.assertEqual(tuple(db.execute('SELECT hash,payload,published_at FROM briefs').fetchone()),before)
     def test_concurrent_draft_edits_and_old_approval(self):
         h=self.ready();bundles=[copy.deepcopy(self.bundle) for _ in range(2)]
         for i,b in enumerate(bundles): b['learning']['level']='B'+str(i)

@@ -16,7 +16,7 @@ class Tests(unittest.TestCase):
  def test_dst(self):
   for date,hour in [('2026-03-28',7),('2026-03-29',6),('2026-10-24',6),('2026-10-25',7)]:self.assertEqual(clock(datetime.fromisoformat(f'{date}T{hour:02}:00:00+00:00')).hour,8)
  def test_early_and_idempotent(self):
-  self.assertEqual(run(self.store,self.bundle,datetime.fromisoformat('2026-09-30T07:59:00+02:00'))['status'],'not_due');self.assertEqual(run(self.store,self.bundle,NOW)['status'],'published');self.assertEqual(run(self.store,self.bundle,NOW)['status'],'unchanged')
+  self.assertEqual(run(self.store,self.bundle,datetime.fromisoformat('2026-09-30T05:59:59+02:00'))['status'],'not_due');self.assertEqual(run(self.store,self.bundle,NOW)['status'],'published');self.assertEqual(run(self.store,self.bundle,NOW)['status'],'unchanged')
  def test_stale_and_wrong_date(self):
   self.bundle['calendar']['checkedAt']='2026-09-28T07:50:00+02:00'
   with self.assertRaises(ValueError):run(self.store,self.bundle,NOW)
