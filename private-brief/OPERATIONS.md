@@ -24,8 +24,8 @@ Cloudflare's existing brief-host cache bypass must remain configured.
 
 The source bundle follows `fixtures/synthetic.json` and the existing README contract.
 The server supplies the Europe/Brussels clock; clients cannot supply server time.
-Only the current Brussels date is accepted. Preparation may precede 08:00;
-publication is due at or after 08:00. Verified sources and deal checks expire after
+Only the current Brussels date is accepted. Preparation may precede 06:00;
+publication is due at or after 06:00 Brussels local time (including DST). Verified sources and deal checks expire after
 24 hours; naive/future timestamps, oversized text, nonfinite numbers, malformed
 vocabulary/puzzles, missing evidence and source-hash mismatches are rejected.
 Imported source text is limited to 12,000 characters per article without silent truncation.

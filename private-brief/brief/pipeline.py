@@ -11,7 +11,7 @@ ZONE = ZoneInfo('Europe/Brussels')
 def clock(now=None):
     return (now or datetime.now(timezone.utc)).astimezone(ZONE)
 def due(now=None):
-    return clock(now).hour >= 8
+    return clock(now).hour >= 6
 
 def limits(preferences):
     result = {}
