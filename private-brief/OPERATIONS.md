@@ -212,6 +212,16 @@ deployment still require actual setup/testing; neither can be inferred from loca
 Do not enable any daily schedule until live source access, cloud operation, publication
 and phone opt-in are verified. Do not report today's brief published unless status proves it.
 
+## Read-only OfferHunter source handoff
+
+`GET /api/publisher/v1/sources/offerhunter` uses the existing bearer `review` permission and grant expiry/revocation/rate checks. Browser cookies and Origin remain rejected. The reader opens only `/var/lib/nabi-offerhunter-summary/top-offers.json`; request arguments cannot choose another file. No credential, grant, timer, refresh, delivery acknowledgement or publication action is added.
+
+The response is `ready`, `stale` or `unavailable`, with the current Brussels `date`; waiting states include `retryAfterSeconds=10`. Ready requires schema version 2 for `daily-brief`, timezone-aware preparation/refresh timestamps from today's 06:00 Brussels onwards, not in the future. Missing, malformed, oversized or inconsistent snapshots fail closed. Selected returning offers precede top offers and deduplicate; public product/provenance fields are allowlisted and private source records/watch IDs/unknown fields are removed. Coverage retains blocked/partial states; invalid or expired records increment `rejectedRecords`. Upcoming records are separate and never contain `briefDeal`. Current-price alerts remain labelled current prices, not dated promotions.
+
+Only active exact-variant offers with supported retailer/pack/validity/provenance receive a `briefDeal` candidate. Action uses official Belgian product URLs; family cards retain their conditions but receive no invented unit comparison. Feed these candidates into the ordinary current-date `deals` input and re-prepare/review/approve/publish through the existing exact-hash flow. The shared freshness and date validation still applies; this endpoint never changes the stored draft or publication. Keep actual summary data out of public source, CI artifacts and logs.
+
+The Pi's existing OfferHunter timer owns refresh. The cloud workflow reads/waits for its fresh summary and does not create another refresh timer. Exposing `get_offerhunter_summary` in the existing owner-only Sites bridge requires a code/schema update in that bridge's source; it must call this fixed GET through its existing bearer transport and enforce the existing owner identity check. No new permission or token is needed. The five publishing actions and status response remain unchanged.
+
 ## Prepared phone enrollment and automatic renewal (disabled)
 
 This extension is a draft and is **not active in production**. Its runtime flag
