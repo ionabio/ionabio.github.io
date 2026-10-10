@@ -1,7 +1,0 @@
-# Template only. Do not install before choosing private connectivity and approved TLS/DNS setup.
-brief.nabi.be {
-    reverse_proxy 127.0.0.1:8080
-    header Cache-Control "no-store, private"
-    # Never add file_server over the repo or /var/lib/nabi-brief.
-    # Application logs contain status codes only. Do not enable request-body/debug logging.
-}

@@ -1,8 +1,0 @@
-{
- "date":"2026-09-30",
- "learning":{"level":"B2","locale":"nl-BE"},
- "calendar":{"status":"verified","checkedAt":"2026-09-30T07:50:00+02:00","items":[{"title":"Voorbeeldafspraak — fictief","start":"09:30"}]},
- "todos":{"status":"verified","checkedAt":"2026-09-30T07:50:00+02:00","items":[{"title":"Voorbeeldtaak — fictief","completed":false}]},
- "news":{"status":"verified","checkedAt":"2026-09-30T07:50:00+02:00","items":[{"publisher":"De Standaard","newsletterName":"Synthetische test","receivedAt":"2026-09-30T07:00:00+02:00","publishedAt":null,"headline":"Fictief: de buurt organiseert een boekenruil","canonicalUrl":null,"contentScope":"teaser","authorizedText":"In een fictieve buurt wisselen bewoners boeken uit. De organisatoren hopen dat de boekenruil mensen samenbrengt."}]},
- "deals":{"status":"unavailable","items":[]}
-}
